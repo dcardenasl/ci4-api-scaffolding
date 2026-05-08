@@ -1,0 +1,80 @@
+{
+  "name": "dcardenasl/ci4-api-scaffolding",
+  "description": "CRUD scaffolding engine for CodeIgniter 4 APIs built on dcardenasl/ci4-api-core. Generates DTOs, services, controllers, migrations, routes, tests and OpenAPI docs via spark commands.",
+  "type": "library",
+  "keywords": [
+    "codeigniter4",
+    "scaffolding",
+    "crud",
+    "generator",
+    "code-generation"
+  ],
+  "homepage": "https://github.com/dcardenasl/ci4-api-scaffolding",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "David Cárdenas L.",
+      "email": "code.dcl@gmail.com"
+    }
+  ],
+  "support": {
+    "issues": "https://github.com/dcardenasl/ci4-api-scaffolding/issues",
+    "source": "https://github.com/dcardenasl/ci4-api-scaffolding"
+  },
+  "repositories": [
+    { "type": "path", "url": "../ci4-api-core", "options": { "symlink": true } }
+  ],
+  "require": {
+    "php": "^8.2",
+    "dcardenasl/ci4-api-core": "^0.3",
+    "codeigniter4/framework": "^4.5",
+    "nikic/php-parser": "^5.0"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10.5",
+    "phpstan/phpstan": "^2.0",
+    "friendsofphp/php-cs-fixer": "^3.95",
+    "spatie/phpunit-snapshot-assertions": "^5.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "dcardenasl\\Ci4ApiScaffolding\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/"
+    }
+  },
+  "bin": [
+    "bin/make-crud.sh",
+    "bin/validate-crud.sh"
+  ],
+  "scripts": {
+    "test": "phpunit",
+    "analyse": "phpstan analyse --level=8 --memory-limit=1G",
+    "cs-check": "vendor/bin/php-cs-fixer fix --dry-run --diff --no-interaction",
+    "cs-fix": "vendor/bin/php-cs-fixer fix --no-interaction",
+    "security": "composer audit --no-dev --locked",
+    "quality": [
+      "@analyse",
+      "@cs-check",
+      "@security",
+      "@test"
+    ]
+  },
+  "extra": {
+    "codeigniter4": {
+      "commands": [
+        "dcardenasl\\Ci4ApiScaffolding\\Commands\\MakeCrud",
+        "dcardenasl\\Ci4ApiScaffolding\\Commands\\MakeCrudRemove",
+        "dcardenasl\\Ci4ApiScaffolding\\Commands\\ModuleCheck"
+      ]
+    },
+    "branch-alias": {
+      "dev-main": "0.1.x-dev"
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
