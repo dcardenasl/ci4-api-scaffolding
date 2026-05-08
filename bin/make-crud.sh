@@ -110,6 +110,7 @@ fi
 # Detect uppercase runs (acronyms) and warn about implicit normalization.
 if [[ "$RESOURCE" =~ [A-Z]{2,}[a-z] ]] || [[ "$RESOURCE" =~ [A-Z]{2,}$ ]]; then
     if command -v php >/dev/null 2>&1; then
+        # shellcheck disable=SC2016
         CANONICAL=$(php -r '
 $v = $argv[1];
 $v = preg_replace_callback("/([A-Z]+)([A-Z][a-z]|$)/", static fn (array $m): string => ucfirst(strtolower($m[1])) . $m[2], $v);

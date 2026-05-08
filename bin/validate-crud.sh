@@ -57,6 +57,7 @@ DOMAIN_KEBAB=$(echo "$DOMAIN" | sed 's/\([A-Z]\)/-\1/g' | sed 's/^-//' | tr '[:u
 # stays in sync with the PHP source of truth — no more naive `${RESOURCE%y}`.
 RESOURCE_PLURAL=""
 if [[ -f vendor/autoload.php ]]; then
+    # shellcheck disable=SC2016
     RESOURCE_PLURAL=$(php -r '
         require "vendor/autoload.php";
         if (class_exists(\dcardenasl\Ci4ApiCore\Core\StringHelper::class)) {
