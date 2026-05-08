@@ -18,13 +18,6 @@ jobs:
       - name: Checkout ci4-api-scaffolding
         uses: actions/checkout@v4
 
-      - name: Checkout ci4-api-core (path dependency)
-        uses: actions/checkout@v4
-        with:
-          repository: dcardenasl/ci4-api-core
-          path: ../ci4-api-core
-          ref: main
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -86,13 +79,6 @@ jobs:
       - name: Checkout ci4-api-scaffolding
         uses: actions/checkout@v4
 
-      - name: Checkout ci4-api-core (path dependency)
-        uses: actions/checkout@v4
-        with:
-          repository: dcardenasl/ci4-api-core
-          path: ../ci4-api-core
-          ref: main
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -122,13 +108,6 @@ jobs:
       - name: Checkout ci4-api-scaffolding
         uses: actions/checkout@v4
 
-      - name: Checkout ci4-api-core (path dependency)
-        uses: actions/checkout@v4
-        with:
-          repository: dcardenasl/ci4-api-core
-          path: ../ci4-api-core
-          ref: main
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
@@ -139,5 +118,4 @@ jobs:
       - name: Run E2E smoke test
         env:
           CI4_VERSION: ${{ matrix.ci4-version }}
-          CI4_CORE_PATH: ${{ github.workspace }}/../ci4-api-core
         run: bash bin/e2e-smoke.sh
