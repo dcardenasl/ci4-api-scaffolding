@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ab3a23f7173425e3d869b3f74bdb60b1",
+    "content-hash": "edd78344e3aa56b56f4e57949bdd6b27",
     "packages": [
         {
             "name": "codeigniter4/framework",
@@ -85,15 +85,20 @@
         },
         {
             "name": "dcardenasl/ci4-api-core",
-            "version": "dev-main",
+            "version": "v0.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/dcardenasl/ci4-api-core.git",
+                "reference": "707e41dfaeba0023957a149c2a6042a9afa40789"
+            },
             "dist": {
-                "type": "path",
-                "url": "../ci4-api-core",
-                "reference": "d3a9310f232533ceed1405bfc0ef18392e2c7e30"
+                "type": "zip",
+                "url": "https://api.github.com/repos/dcardenasl/ci4-api-core/zipball/707e41dfaeba0023957a149c2a6042a9afa40789",
+                "reference": "707e41dfaeba0023957a149c2a6042a9afa40789",
+                "shasum": ""
             },
             "require": {
                 "codeigniter4/framework": "^4.5",
-                "nikic/php-parser": "^5.0",
                 "php": "^8.2"
             },
             "require-dev": {
@@ -108,10 +113,6 @@
                 "monolog/monolog": "Required for JSON structured logging via JsonFormatter / MonologHandler (^3.5)",
                 "zircote/swagger-php": "Required to auto-generate OpenAPI specs from DTO/Controller annotations (^4.10 || ^5.0 || ^6.0)"
             },
-            "bin": [
-                "bin/make-crud.sh",
-                "bin/validate-crud.sh"
-            ],
             "type": "library",
             "extra": {
                 "branch-alias": {
@@ -119,41 +120,14 @@
                 }
             },
             "autoload": {
-                "psr-4": {
-                    "dcardenasl\\Ci4ApiCore\\": "src/"
-                },
                 "files": [
                     "src/Helpers/date.php"
-                ]
-            },
-            "autoload-dev": {
+                ],
                 "psr-4": {
-                    "Tests\\": "tests/"
+                    "dcardenasl\\Ci4ApiCore\\": "src/"
                 }
             },
-            "scripts": {
-                "test": [
-                    "phpunit"
-                ],
-                "analyse": [
-                    "phpstan analyse --level=8 --memory-limit=1G"
-                ],
-                "cs-check": [
-                    "vendor/bin/php-cs-fixer fix --dry-run --diff --no-interaction"
-                ],
-                "cs-fix": [
-                    "vendor/bin/php-cs-fixer fix --no-interaction"
-                ],
-                "security": [
-                    "composer audit --no-dev --locked"
-                ],
-                "quality": [
-                    "@analyse",
-                    "@cs-check",
-                    "@security",
-                    "@test"
-                ]
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
@@ -163,24 +137,21 @@
                     "email": "code.dcl@gmail.com"
                 }
             ],
-            "description": "DTO-first API foundation for CodeIgniter 4: base classes + CRUD scaffolding engine. Powers ci4-api-starter and ci4-domain-starter.",
+            "description": "DTO-first API runtime foundation for CodeIgniter 4: base classes, HTTP layer, services, repositories, filters, audit chain, and queue. Powers ci4-api-starter and ci4-domain-starter. Pair with dcardenasl/ci4-api-scaffolding for CRUD generation.",
             "homepage": "https://github.com/dcardenasl/ci4-api-core",
             "keywords": [
                 "api",
-                "code-generation",
+                "base-classes",
                 "codeigniter4",
-                "crud",
                 "dto",
-                "scaffolding"
+                "foundation",
+                "rest"
             ],
             "support": {
                 "issues": "https://github.com/dcardenasl/ci4-api-core/issues",
                 "source": "https://github.com/dcardenasl/ci4-api-core"
             },
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
+            "time": "2026-05-08T07:47:44+00:00"
         },
         {
             "name": "laminas/laminas-escaper",

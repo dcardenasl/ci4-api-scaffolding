@@ -21,9 +21,6 @@
     "issues": "https://github.com/dcardenasl/ci4-api-scaffolding/issues",
     "source": "https://github.com/dcardenasl/ci4-api-scaffolding"
   },
-  "repositories": [
-    { "type": "path", "url": "../ci4-api-core", "options": { "symlink": true } }
-  ],
   "require": {
     "php": "^8.2",
     "dcardenasl/ci4-api-core": "^0.3",
