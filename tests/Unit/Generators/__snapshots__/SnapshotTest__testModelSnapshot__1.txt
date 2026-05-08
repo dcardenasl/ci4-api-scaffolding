@@ -1,0 +1,39 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Models;
+
+use App\Entities\ProductEntity;
+use dcardenasl\Ci4ApiCore\Models\BaseAuditableModel;
+use dcardenasl\Ci4ApiCore\Models\Traits\Filterable;
+use dcardenasl\Ci4ApiCore\Models\Traits\Searchable;
+
+class ProductModel extends BaseAuditableModel
+{
+    use Filterable;
+    use Searchable;
+
+    protected $table = 'products';
+    protected $primaryKey = 'id';
+    protected $returnType = ProductEntity::class;
+    protected $useSoftDeletes = true;
+    protected $useTimestamps = true;
+
+    protected $allowedFields = ['name', 'price', 'in_stock'];
+
+    /** @var array<int, string> */
+    protected array $searchableFields = ['name'];
+
+    /** @var array<int, string> */
+    protected array $filterableFields = ['id', 'price'];
+
+    /** @var array<int, string> */
+    protected array $sortableFields = ['id', 'created_at', 'name', 'price'];
+
+    protected $validationRules = [
+        'name' => 'required|string|max_length[255]',
+        'price' => 'required|decimal',
+        'in_stock' => 'permit_empty|boolean_like',
+    ];
+}
