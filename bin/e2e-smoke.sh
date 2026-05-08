@@ -15,8 +15,6 @@
 #
 # Environment variables:
 #   CI4_VERSION    Composer constraint for CI4 (default: 4.7.*)
-#   CI4_CORE_PATH  Path to a checked-out ci4-api-core repo
-#                  (default: ../ci4-api-core, relative to this package root)
 #   WORK_DIR       Reuse an existing temp dir (default: create + auto-clean)
 
 set -euo pipefail
@@ -26,14 +24,7 @@ IFS=$'\n\t'
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCAFFOLDING_DIR="$(realpath "$SCRIPT_DIR/..")"
-CORE_DIR="${CI4_CORE_PATH:-$(realpath "$SCAFFOLDING_DIR/../ci4-api-core")}"
 CI4_VERSION="${CI4_VERSION:-4.7.*}"
-
-if [[ ! -d "$CORE_DIR" ]]; then
-    echo "❌ ci4-api-core not found at: $CORE_DIR"
-    echo "   Set CI4_CORE_PATH to a checked-out ci4-api-core directory."
-    exit 1
-fi
 
 CLEANUP=false
 if [[ -z "${WORK_DIR:-}" ]]; then
@@ -49,7 +40,6 @@ echo " E2E Smoke Test — ci4-api-scaffolding"
 echo "════════════════════════════════════════════════════════"
 printf "  PHP:          %s\\n" "$(php -r 'echo PHP_VERSION;')"
 printf "  CI4 version:  %s\\n" "$CI4_VERSION"
-printf "  ci4-api-core: %s\\n" "$CORE_DIR"
 printf "  scaffolding:  %s\\n" "$SCAFFOLDING_DIR"
 printf "  work dir:     %s\\n" "$WORK_DIR"
 echo ""
@@ -73,12 +63,10 @@ cd "$WORK_DIR"
 echo "Step 2 — Install ci4-api-core + ci4-api-scaffolding"
 composer config minimum-stability dev   --no-interaction --quiet
 composer config prefer-stable    true   --no-interaction --quiet
-composer config repositories.ci4-api-core        path "$CORE_DIR"        \
-    --json --no-interaction --quiet
 composer config repositories.ci4-api-scaffolding path "$SCAFFOLDING_DIR" \
     --json --no-interaction --quiet
 
-composer require "dcardenasl/ci4-api-core:dev-main" \
+composer require "dcardenasl/ci4-api-core:^0.3" \
     --no-interaction --no-progress --quiet
 composer require --dev "dcardenasl/ci4-api-scaffolding:dev-main" \
     --no-interaction --no-progress --quiet
