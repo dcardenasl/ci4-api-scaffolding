@@ -1,0 +1,44 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\DTO\Request\Catalog;
+
+use dcardenasl\Ci4ApiCore\Dto\BaseRequestDTO;
+use OpenApi\Attributes as OA;
+
+#[OA\Schema(schema: 'ProductUpdateRequest')]
+readonly class ProductUpdateRequestDTO extends BaseRequestDTO
+{
+    #[OA\Property(description: 'name', type: 'string', nullable: true)]
+    public ?string $name;
+    #[OA\Property(description: 'price', type: 'number', format: 'float', nullable: true)]
+    public ?float $price;
+    #[OA\Property(description: 'in_stock', type: 'boolean', nullable: true)]
+    public ?bool $in_stock;
+
+    public function rules(): array
+    {
+        return [
+            'name' => 'permit_empty|string|max_length[255]',
+            'price' => 'permit_empty|decimal',
+            'in_stock' => 'permit_empty|boolean_like',
+        ];
+    }
+
+    protected function map(array $data): void
+    {
+        $this->name = $data['name'] ?? null;
+        $this->price = isset($data['price']) ? (float) $data['price'] : null;
+        $this->in_stock = isset($data['in_stock']) ? (bool) $data['in_stock'] : null;
+    }
+
+    public function toArray(): array
+    {
+        return array_filter([
+            'name' => $this->name,
+            'price' => $this->price,
+            'in_stock' => $this->in_stock,
+        ], fn($v) => $v !== null);
+    }
+}
