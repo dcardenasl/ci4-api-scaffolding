@@ -1,0 +1,59 @@
+parameters:
+    level: 8
+    paths:
+        - src
+    excludePaths:
+        - vendor
+    reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        # CI4 global helpers (lang, service, log_message, config) are loaded
+        # by the framework's system/Common.php. PHPStan does not see them
+        # when analyzing the package in isolation.
+        -
+            message: '#Function (lang|service|log_message|config) not found#'
+            paths:
+                - src/*
+
+        # env() is a CI4 framework helper, available in any host.
+        -
+            message: '#Function env not found#'
+            paths:
+                - src/*
+
+        # APPPATH and ROOTPATH are CI4 framework runtime constants. Defined
+        # by any CI4 host (and by tests/bootstrap.php).
+        -
+            message: '#Constant (APPPATH|ROOTPATH) not found#'
+            paths:
+                - src/Generators/*
+                - src/Orchestration/*
+                - src/Wiring/*
+                - src/Commands/*
+
+        # EXIT_SUCCESS and EXIT_ERROR are spark command convention constants
+        # defined by CI4 when commands run.
+        -
+            message: '#Constant EXIT_(SUCCESS|ERROR) not found#'
+            paths:
+                - src/Commands/*
+
+        # Config\Database / Config\Services live in the consumer's app/Config/.
+        # PHPStan can't resolve them from the package side.
+        -
+            message: '#(unknown class|Class) Config\\(Database|Services|App|Api)( not found\.)?#'
+            paths:
+                - src/Validators/*
+                - src/Wiring/*
+                - src/Commands/*
+
+        # CLI::prompt() returns string|bool. The === null defensive check is
+        # intentional for non-TTY environments. PHPStan reads only string.
+        -
+            message: '#Strict comparison using === between string and null will always evaluate to false#'
+            path: src/Commands/MakeCrud.php
+
+        # ValidatesRequiredFields is a public-API trait consumed by services
+        # in consumer projects. PHPStan flags it as unused within the package.
+        -
+            identifier: trait.unused
+            path: src/Validators/ValidatesRequiredFields.php
