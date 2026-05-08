@@ -72,7 +72,7 @@ composer config prefer-stable    true   --no-interaction --quiet
 composer config repositories.ci4-api-scaffolding path "$SCAFFOLDING_DIR" \
     --json --no-interaction --quiet
 
-composer require --dev "dcardenasl/ci4-api-scaffolding:dev-main" \
+composer require --dev "dcardenasl/ci4-api-scaffolding:*@dev" \
     --no-interaction --no-progress
 pass "Both packages installed"
 
