@@ -61,15 +61,19 @@ cd "$WORK_DIR"
 # ── Step 2: Install packages via path repositories ───────────────────────────
 
 echo "Step 2 — Install ci4-api-core + ci4-api-scaffolding"
+# Install stable ci4-api-core before allowing dev stability,
+# to avoid Composer evaluating the 0.3.x-dev alias and its constraints.
+composer require "dcardenasl/ci4-api-core:^0.3" \
+    --no-interaction --no-progress
+
+# Now allow dev packages for the local path dependency.
 composer config minimum-stability dev   --no-interaction --quiet
 composer config prefer-stable    true   --no-interaction --quiet
 composer config repositories.ci4-api-scaffolding path "$SCAFFOLDING_DIR" \
     --json --no-interaction --quiet
 
-composer require "dcardenasl/ci4-api-core:^0.3" \
-    --no-interaction --no-progress --quiet
 composer require --dev "dcardenasl/ci4-api-scaffolding:dev-main" \
-    --no-interaction --no-progress --quiet
+    --no-interaction --no-progress
 pass "Both packages installed"
 
 # ── Step 3: Consumer configuration ───────────────────────────────────────────
