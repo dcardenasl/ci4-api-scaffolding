@@ -1,0 +1,143 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+jobs:
+  test:
+    name: PHP ${{ matrix.php-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.2', '8.3', '8.4']
+
+    steps:
+      - name: Checkout ci4-api-scaffolding
+        uses: actions/checkout@v4
+
+      - name: Checkout ci4-api-core (path dependency)
+        uses: actions/checkout@v4
+        with:
+          repository: dcardenasl/ci4-api-core
+          path: ../ci4-api-core
+          ref: main
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: ${{ matrix.php-version == '8.2' && 'xdebug' || 'none' }}
+          extensions: intl, mbstring, json, dom
+
+      - name: Validate composer.json
+        run: composer validate --strict --no-check-publish
+
+      - name: Lint shell scripts
+        run: shellcheck bin/make-crud.sh bin/validate-crud.sh bin/e2e-smoke.sh
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-php-${{ matrix.php-version }}-${{ hashFiles('**/composer.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-php-${{ matrix.php-version }}-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-interaction --no-progress
+
+      - name: PHP CS Fixer (dry-run)
+        run: composer cs-check
+
+      - name: PHPStan
+        run: composer analyse
+
+      - name: PHPUnit
+        run: composer test -- --testsuite Unit ${{ matrix.php-version == '8.2' && '--coverage-clover coverage.xml' || '' }}
+
+      - name: PHPUnit E2E
+        run: composer test -- --testsuite E2E
+
+      - name: Upload coverage to Codecov
+        if: matrix.php-version == '8.2'
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+      - name: Security audit
+        run: composer security
+
+  ci4-compatibility:
+    name: CI4 ${{ matrix.ci4-version }} / PHP ${{ matrix.php-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.2', '8.3']
+        ci4-version: ['4.5.*', '4.6.*', '4.7.*']
+
+    steps:
+      - name: Checkout ci4-api-scaffolding
+        uses: actions/checkout@v4
+
+      - name: Checkout ci4-api-core (path dependency)
+        uses: actions/checkout@v4
+        with:
+          repository: dcardenasl/ci4-api-core
+          path: ../ci4-api-core
+          ref: main
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: none
+          extensions: intl, mbstring, json, dom
+
+      - name: Install dependencies with pinned CI4 version
+        run: |
+          composer remove codeigniter4/framework --no-update
+          composer require "codeigniter4/framework:${{ matrix.ci4-version }}" --no-update
+          composer update --prefer-dist --no-interaction --no-progress
+
+      - name: PHPUnit (Unit only — no live DB needed)
+        run: composer test -- --testsuite Unit
+
+  e2e-integration:
+    name: E2E CI4 ${{ matrix.ci4-version }} / PHP ${{ matrix.php-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ['8.2', '8.3']
+        ci4-version: ['4.5.*', '4.6.*', '4.7.*']
+
+    steps:
+      - name: Checkout ci4-api-scaffolding
+        uses: actions/checkout@v4
+
+      - name: Checkout ci4-api-core (path dependency)
+        uses: actions/checkout@v4
+        with:
+          repository: dcardenasl/ci4-api-core
+          path: ../ci4-api-core
+          ref: main
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: none
+          extensions: intl, mbstring, json, dom
+
+      - name: Run E2E smoke test
+        env:
+          CI4_VERSION: ${{ matrix.ci4-version }}
+          CI4_CORE_PATH: ${{ github.workspace }}/../ci4-api-core
+        run: bash bin/e2e-smoke.sh
