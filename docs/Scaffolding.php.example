@@ -1,0 +1,56 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Config;
+
+use dcardenasl\Ci4ApiScaffolding\Config\BaseScaffoldingConfig;
+use dcardenasl\Ci4ApiScaffolding\Config\ScaffoldingConfig;
+
+/**
+ * Scaffolding configuration for the consumer project.
+ *
+ * Copy this file to `app/Config/Scaffolding.php` after installing
+ * `dcardenasl/ci4-api-scaffolding`, then adjust `protectedRouteFilters`
+ * to match your auth strategy (or leave the secure-by-default
+ * superadmin gate that ships with `defaults()`).
+ *
+ * The simplest possible body is:
+ *
+ *     public function build(): ScaffoldingConfig
+ *     {
+ *         return ScaffoldingConfig::defaults();
+ *     }
+ *
+ * The fuller form below shows how to override a single field — here we
+ * loosen the filter chain so generated routes are protected only by JWT
+ * + throttle (no specific permission). Tighten in production.
+ */
+class Scaffolding extends BaseScaffoldingConfig
+{
+    public function build(): ScaffoldingConfig
+    {
+        $defaults = ScaffoldingConfig::defaults();
+
+        return new ScaffoldingConfig(
+            controllerBaseClass: $defaults->controllerBaseClass,
+            serviceBaseClass: $defaults->serviceBaseClass,
+            serviceContractInterface: $defaults->serviceContractInterface,
+            modelBaseClass: $defaults->modelBaseClass,
+            entityBaseClass: $defaults->entityBaseClass,
+            migrationBaseClass: $defaults->migrationBaseClass,
+            requestDtoBaseClass: $defaults->requestDtoBaseClass,
+            responseDtoInterface: $defaults->responseDtoInterface,
+            repositoryInterface: $defaults->repositoryInterface,
+            responseMapperInterface: $defaults->responseMapperInterface,
+            repositoryImplementation: $defaults->repositoryImplementation,
+            responseMapperImplementation: $defaults->responseMapperImplementation,
+            servicesFactoryClass: $defaults->servicesFactoryClass,
+            paths: $defaults->paths,
+            protectedRouteFilters: ['jwtauth', 'throttle'],
+            appNamespace: $defaults->appNamespace,
+            openApiTagPrefix: $defaults->openApiTagPrefix,
+            conditionalControllerTraits: $defaults->conditionalControllerTraits,
+        );
+    }
+}
