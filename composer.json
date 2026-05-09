@@ -24,7 +24,7 @@
   "require": {
     "php": "^8.2",
     "dcardenasl/ci4-api-core": "^0.3",
-    "codeigniter4/framework": "^4.5",
+    "codeigniter4/framework": "^4.6",
     "nikic/php-parser": "^5.0"
   },
   "require-dev": {
