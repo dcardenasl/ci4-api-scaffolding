@@ -47,6 +47,7 @@ class MakeCrud extends BaseCommand
         '--route' => 'Route slug plural (default: kebab-case plural of resource)',
         '--fields' => 'Fields definition string (name:type:options,...)',
         '--soft-delete' => 'Enable soft deletes yes|no (default: yes)',
+        '--version' => 'API version for route path (default: v1). Example: --version v2 → routes in Config/Routes/v2/',
         '--dry-run' => 'Show planned files and wiring without writing anything',
         '--no-wire' => 'Generate files but skip Services.php injection. Print snippets to paste manually instead.',
         '--skip-fk-validation' => 'Skip the FK target check when the database is unreachable. Use only when you know the targets exist.',
@@ -67,6 +68,9 @@ class MakeCrud extends BaseCommand
         $route = (string) (CLI::getOption('route') ?: StringHelper::toKebab(StringHelper::pluralize($resource)));
         $fieldsArg = (string) (CLI::getOption('fields') ?: '');
         $softDelete = $this->yesNoOption('soft-delete', true);
+        $apiVersion = preg_match('/^v\d+$/', (string) (CLI::getOption('version') ?: 'v1'))
+            ? (string) (CLI::getOption('version') ?: 'v1')
+            : 'v1';
         $dryRun = CLI::getOption('dry-run') !== null;
         $noWire = CLI::getOption('no-wire') !== null;
         $skipFkValidation = CLI::getOption('skip-fk-validation') !== null;
@@ -102,7 +106,8 @@ class MakeCrud extends BaseCommand
                 domain: $domain,
                 route: $route,
                 fields: $fields,
-                softDelete: $softDelete
+                softDelete: $softDelete,
+                apiVersion: $apiVersion,
             );
 
             // 2b. Verify FK targets exist. By default, abort if the DB is

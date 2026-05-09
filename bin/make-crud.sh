@@ -50,15 +50,18 @@ POSITIONAL=()
 MIGRATE=false
 DRY_RUN=false
 NO_WIRE=false
+API_VERSION="v1"
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --migrate)  MIGRATE=true; shift ;;
         --dry-run)  DRY_RUN=true; shift ;;
         --no-wire)  NO_WIRE=true; shift ;;
+        --version)  API_VERSION="${2:-v1}"; shift 2 ;;
+        --version=*) API_VERSION="${1#--version=}"; shift ;;
         --help|-h)
             cat <<'USAGE'
 Usage:
-  vendor/bin/make-crud.sh <Resource> <Domain> <Fields> [SoftDelete] [Route] [--migrate] [--dry-run] [--no-wire]
+  vendor/bin/make-crud.sh <Resource> <Domain> <Fields> [SoftDelete] [Route] [--migrate] [--dry-run] [--no-wire] [--version vN]
 
 Arguments:
   <Resource>     Resource name in StudlyCase (e.g., Audience, SchoolCategory)
@@ -72,6 +75,7 @@ Flags:
                  (catches the upstream bug where spark migrate exits 0 on errors).
   --dry-run      Show planned actions without writing files.
   --no-wire      Skip Services.php injection. Print snippets to paste manually.
+  --version vN   API version for route path (default: v1). Example: --version v2
 
 Field Options:
   required, nullable, searchable, filterable, unique, index
@@ -133,6 +137,7 @@ echo "  Resource:     $RESOURCE"
 echo "  Domain:       $DOMAIN"
 echo "  Fields:       $FIELDS"
 echo "  Soft Delete:  $SOFT_DELETE"
+echo "  API Version:  $API_VERSION"
 [[ -n "$ROUTE" ]] && echo "  Route:        $ROUTE"
 [[ "$DRY_RUN" == true ]] && echo "  Mode:         DRY RUN"
 [[ "$NO_WIRE" == true ]] && echo "  Wiring:       --no-wire (manual)"
@@ -145,6 +150,7 @@ echo -e "${YELLOW}Step 1: Scaffolding CRUD...${NC}"
 
 SPARK_FLAGS=()
 [[ -n "$ROUTE" ]] && SPARK_FLAGS+=(--route "$ROUTE")
+[[ "$API_VERSION" != "v1" ]] && SPARK_FLAGS+=(--version "$API_VERSION")
 [[ "$DRY_RUN" == true ]] && SPARK_FLAGS+=(--dry-run)
 [[ "$NO_WIRE" == true ]] && SPARK_FLAGS+=(--no-wire)
 
