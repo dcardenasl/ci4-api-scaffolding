@@ -29,6 +29,18 @@ readonly class ProductResponseDTO implements DataTransferObjectInterface
         public ?string $updatedAt = null
     ) {}
 
+    public static function fromArray(array $data): static
+    {
+        return new static(
+            id: (int) ($data['id'] ?? 0),
+            name: (string) ($data['name'] ?? ''),
+            price: (float) ($data['price'] ?? 0),
+            in_stock: (bool) ($data['in_stock'] ?? false),
+            createdAt: $data['created_at'] ?? null,
+            updatedAt: $data['updated_at'] ?? null,
+        );
+    }
+
     public function toArray(): array
     {
         return [

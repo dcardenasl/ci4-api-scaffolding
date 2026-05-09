@@ -24,6 +24,15 @@ readonly class {resource}ResponseDTO implements {ifaceShort}
         public ?string $updatedAt = null
     ) {}
 
+    public static function fromArray(array $data): static
+    {
+        return new static(
+            id: (int) ($data['id'] ?? 0),
+{fromArrayMappings}            createdAt: $data['created_at'] ?? null,
+            updatedAt: $data['updated_at'] ?? null,
+        );
+    }
+
     public function toArray(): array
     {
         return [

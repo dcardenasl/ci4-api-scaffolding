@@ -203,6 +203,7 @@ class DtoGenerator implements CrudGeneratorInterface
     {
         $params = '';
         $toArray = '';
+        $fromArrayMappings = '';
         $requiredFields = ['id'];
 
         foreach ($schema->fields as $field) {
@@ -220,6 +221,7 @@ class DtoGenerator implements CrudGeneratorInterface
             $params .= "        public {$phpType} \${$field->name},";
 
             $toArray .= "            '{$field->name}' => \$this->{$field->name},\n";
+            $fromArrayMappings .= "            {$field->name}: " . $this->buildMapExpression($field) . ",\n";
         }
 
         $requiredJson = json_encode($requiredFields);
@@ -232,13 +234,14 @@ class DtoGenerator implements CrudGeneratorInterface
         $ifaceShort = Fqcn::shortName($ifaceFqcn);
 
         return $this->renderer->render('dto/ResponseDTO', [
-            'ns'           => $ns,
-            'ifaceFqcn'    => $ifaceFqcn,
-            'ifaceShort'   => $ifaceShort,
-            'resource'     => $schema->resource,
-            'requiredJson' => (string) $requiredJson,
-            'params'       => $params,
-            'toArray'      => $toArray,
+            'ns'                => $ns,
+            'ifaceFqcn'         => $ifaceFqcn,
+            'ifaceShort'        => $ifaceShort,
+            'resource'          => $schema->resource,
+            'requiredJson'      => (string) $requiredJson,
+            'params'            => $params,
+            'toArray'           => $toArray,
+            'fromArrayMappings' => $fromArrayMappings,
         ]);
     }
 }
