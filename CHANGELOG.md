@@ -7,8 +7,13 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 ## [Unreleased]
 
 ### Added
+- **`--version` option for `make:crud` / `make-crud.sh`** — accepts a version string (e.g. `v2`) that targets a different route directory (`app/Config/Routes/v2/`). Generated routes are placed in the versioned subdirectory; unversioned usage defaults to `v1` as before. Useful for projects migrating to a second API version while keeping v1 routes intact. Updated in `MakeCrud`, `RouteGenerator`, `ResourceSchema`, `ScaffoldingConfig`, and `bin/make-crud.sh`.
+- **`fromArray(array $data): static` factory on generated `ResponseDTO`s** — `DtoGenerator` now emits a static named constructor on every response DTO. Lets consumers hydrate DTOs from raw associative arrays without calling the constructor directly; consistent with CI4 Entity `fill()` patterns. Snapshot baseline updated.
 - **`bin/e2e-smoke.sh`** — End-to-end smoke test script. Creates a vanilla CI4 project via `composer create-project`, installs both `dcardenasl/ci4-api-core` and `dcardenasl/ci4-api-scaffolding` from path repositories, scaffolds a sample `Article` resource, and verifies output through four gates: (1) `php -l` syntax check on all generated files, (2) file count ≥ 13, (3) PHPStan level 5 on generated code, (4) `php spark routes:list` (best-effort). Configurable via `CI4_VERSION`, `CI4_CORE_PATH`, and `WORK_DIR` environment variables.
 - **`e2e-integration` GitHub Actions job** — Matrix job (PHP 8.2/8.3 × CI4 4.5.*/4.6.*/4.7.*) that runs `bin/e2e-smoke.sh` on every push and PR. The job checks out both packages, resolving the `ci4-api-core` path dependency the same way the `ci4-compatibility` job does. `shellcheck` validation for `e2e-smoke.sh` added to the existing `test` job.
+
+### Changed
+- **Minimum CodeIgniter 4 version raised to `^4.6`** — CI4 4.5.x dropped from the test matrix following upstream security advisories. Consumers on 4.5.x must upgrade before pulling this version.
 
 ## [0.1.0] - 2026-05-08
 

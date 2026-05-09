@@ -164,6 +164,7 @@ php spark make:crud <Resource> \
 | `--fields` / arg 3 | interactive | Field definition string (see [Field Types](#field-types)) |
 | `--route` / arg 5 | kebab-case plural of resource | Route slug used in the URL |
 | `--soft-delete` / arg 4 | `yes` | Emit `deleted_at` column and soft-delete logic |
+| `--version` | `v1` | Target a versioned route directory (e.g. `--version v2` writes routes to `Config/Routes/v2/`) |
 | `--dry-run` | off | Preview planned files and wiring without writing anything |
 | `--no-wire` | off | Generate files but skip `Services.php` injection; prints snippets to paste manually |
 | `--skip-fk-validation` | off | Skip the FK target existence check when the database is unreachable |
