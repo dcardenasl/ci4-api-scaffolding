@@ -12,7 +12,7 @@ use OpenApi\Attributes as OA;
     title: '{resource} Response',
     required: {requiredJson}
 )]
-readonly class {resource}ResponseDTO implements {ifaceShort}
+final readonly class {resource}ResponseDTO implements {ifaceShort}
 {
     public function __construct(
         #[OA\Property(description: 'Unique identifier', example: 1)]
