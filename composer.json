@@ -23,7 +23,7 @@
   },
   "require": {
     "php": "^8.2",
-    "dcardenasl/ci4-api-core": "^0.4",
+    "dcardenasl/ci4-api-core": "^0.4.1",
     "codeigniter4/framework": "^4.6",
     "nikic/php-parser": "^5.0"
   },
@@ -75,7 +75,7 @@
       ]
     },
     "branch-alias": {
-      "dev-main": "0.2.x-dev"
+      "dev-main": "0.3.x-dev"
     }
   },
   "minimum-stability": "dev",

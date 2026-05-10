@@ -6,6 +6,17 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-10
+
+### Added
+
+- **`RouteGenerator::patchMainRoutesLoader(string $apiVersion): bool`** — new public method called automatically by `make:crud` on every scaffold. Injects a versioned glob loader block (`$routes->group('api/{version}', ...)`) into `app/Config/Routes.php` so all domain route files under `app/Config/Routes/{version}/` are discovered by CI4 without manual wiring. Idempotent via `// ci4-api-scaffolding: loader start/end` markers; skips silently when an `api/{version}` group already exists in the file (e.g. projects using `ci4-api-starter`'s hand-crafted routes block). The pure transformation is exposed as `applyLoaderPatch(string $content, string $apiVersion): string` for unit testing without file I/O.
+
+### Changed
+
+- **`dcardenasl/ci4-api-core` requirement raised to `^0.4.1`** — aligns with the `core:install` health route injection shipped in that patch. `^0.4` consumers must upgrade core before pulling this version.
+- **`ScaffoldingConfig::defaults()` now accepts `array $protectedRouteFilters = []`** (empty by default). Previously the method hardcoded `['jwtauth', 'permission:iam.superadmin-access', 'throttle']`, which are `ci4-api-starter`-specific filter aliases that don't exist in a generic CI4 project. Consumers running `ci4-api-starter` must now pass their filter list explicitly (e.g. via `App\Config\Scaffolding::build()` or `ScaffoldingConfig::defaults(['jwtauth', 'permission:iam.superadmin-access', 'throttle'])`). The method signature is backwards-compatible; the default behavior changes.
+
 ## [0.2.0] - 2026-05-09
 
 ### Added
@@ -39,5 +50,6 @@ Initial release — extracted from `dcardenasl/ci4-api-core` v0.3.0.
 - **`bin/make-crud.sh`** + **`bin/validate-crud.sh`** — shell wrappers safe for non-TTY contexts (CI, Claude Code). Exposed as Composer `bin` entries so `vendor/bin/make-crud.sh` works in consumer projects.
 - **105 tests** covering all 8 generators (including 17 snapshot tests), orchestration, validators, wiring, and commands.
 
+[0.3.0]: https://github.com/dcardenasl/ci4-api-scaffolding/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/dcardenasl/ci4-api-scaffolding/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/dcardenasl/ci4-api-scaffolding/releases/tag/v0.1.0
