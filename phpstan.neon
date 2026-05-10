@@ -20,10 +20,10 @@ parameters:
             paths:
                 - src/*
 
-        # APPPATH and ROOTPATH are CI4 framework runtime constants. Defined
-        # by any CI4 host (and by tests/bootstrap.php).
+        # APPPATH, ROOTPATH and FCPATH are CI4 framework runtime constants.
+        # Defined by any CI4 host (and by tests/bootstrap.php).
         -
-            message: '#Constant (APPPATH|ROOTPATH) not found#'
+            message: '#Constant (APPPATH|ROOTPATH|FCPATH) not found#'
             paths:
                 - src/Generators/*
                 - src/Orchestration/*

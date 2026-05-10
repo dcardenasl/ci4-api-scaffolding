@@ -35,7 +35,8 @@ class RouteGenerator implements CrudGeneratorInterface
     public function generate(ResourceSchema $schema): array
     {
         $domainKebab = $schema->toKebab($schema->domain);
-        $path = APPPATH . $this->config->paths->routes . "/{$domainKebab}.php";
+        $routesDir = (string) preg_replace('/v\d+$/', $schema->apiVersion, $this->config->paths->routes);
+        $path = APPPATH . $routesDir . "/{$domainKebab}.php";
 
         $content = file_exists($path) ? (string) file_get_contents($path) : $this->baseTemplate($schema);
 

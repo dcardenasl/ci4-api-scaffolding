@@ -12,6 +12,7 @@ readonly class ResourceSchema
 {
     /**
      * @param Field[] $fields
+     * @param string $apiVersion API version prefix used by RouteGenerator (e.g. 'v1', 'v2')
      */
     public function __construct(
         public string $resource,
@@ -20,7 +21,8 @@ readonly class ResourceSchema
         public array $fields,
         public bool $softDelete = true,
         public bool $publicRead = true,
-        public bool $adminWrite = true
+        public bool $adminWrite = true,
+        public string $apiVersion = 'v1',
     ) {
     }
 

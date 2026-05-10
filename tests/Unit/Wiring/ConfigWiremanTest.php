@@ -190,8 +190,11 @@ final class ConfigWiremanTest extends TestCase
         }
     }
 
-    public function testServiceFactoryWithDefaultsMatchesHistoricalShape(): void
+    public function testServiceFactoryDefaultsUseCoreFqcns(): void
     {
+        // defaults() must point repository and mapper implementations at ci4-api-core,
+        // not at App\... — a project with only ci4-api-core installed (no ci4-api-starter)
+        // must get working wired code out of the box.
         $wireman = new ConfigWireman(ScaffoldingConfig::defaults());
         $schema = new ResourceSchema(
             resource: 'Product',
@@ -206,9 +209,13 @@ final class ConfigWiremanTest extends TestCase
         $this->assertStringContainsString('public static function productResponseMapper(', $snippet);
         $this->assertStringContainsString(': \\App\\Interfaces\\Catalog\\ProductServiceInterface', $snippet);
         $this->assertStringContainsString(': \\dcardenasl\\Ci4ApiCore\\Mappers\\ResponseMapperInterface', $snippet);
-        $this->assertStringContainsString('new \\App\\Repositories\\GenericRepository(model(\\App\\Models\\ProductModel::class))', $snippet);
-        $this->assertStringContainsString('return new \\App\\Services\\Core\\Mappers\\DtoResponseMapper(', $snippet);
+        $this->assertStringContainsString('new \\dcardenasl\\Ci4ApiCore\\Repositories\\GenericRepository(model(\\App\\Models\\ProductModel::class))', $snippet);
+        $this->assertStringContainsString('return new \\dcardenasl\\Ci4ApiCore\\Mappers\\DtoResponseMapper(', $snippet);
         $this->assertStringContainsString('\\App\\DTO\\Response\\Catalog\\ProductResponseDTO::class', $snippet);
+
+        // No App\ leakage in the implementation classes (only App\ for domain-specific classes is fine).
+        $this->assertStringNotContainsString('\\App\\Repositories\\GenericRepository', $snippet);
+        $this->assertStringNotContainsString('\\App\\Services\\Core\\Mappers\\DtoResponseMapper', $snippet);
     }
 
     public function testWireSucceedsWithPhp8AttributeOnServicesClass(): void

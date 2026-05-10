@@ -12,7 +12,7 @@ use OpenApi\Attributes as OA;
     title: '{resource} Response',
     required: {requiredJson}
 )]
-readonly class {resource}ResponseDTO implements {ifaceShort}
+final readonly class {resource}ResponseDTO implements {ifaceShort}
 {
     public function __construct(
         #[OA\Property(description: 'Unique identifier', example: 1)]
@@ -23,6 +23,15 @@ readonly class {resource}ResponseDTO implements {ifaceShort}
         #[OA\Property(property: 'updated_at', description: 'Last update timestamp', example: '2026-02-26 12:00:00', nullable: true)]
         public ?string $updatedAt = null
     ) {}
+
+    public static function fromArray(array $data): static
+    {
+        return new static(
+            id: (int) ($data['id'] ?? 0),
+{fromArrayMappings}            createdAt: $data['created_at'] ?? null,
+            updatedAt: $data['updated_at'] ?? null,
+        );
+    }
 
     public function toArray(): array
     {
