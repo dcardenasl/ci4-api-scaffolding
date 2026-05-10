@@ -27,12 +27,12 @@ CRUD scaffolding engine for CodeIgniter 4 APIs built on [`dcardenasl/ci4-api-cor
 
 - PHP `^8.2`
 - CodeIgniter 4 `^4.6`
-- [`dcardenasl/ci4-api-core`](https://packagist.org/packages/dcardenasl/ci4-api-core) `^0.3` (installed automatically as a dependency)
+- [`dcardenasl/ci4-api-core`](https://packagist.org/packages/dcardenasl/ci4-api-core) `^0.4` (installed automatically as a dependency)
 
 ## Installation
 
 ```bash
-composer require --dev dcardenasl/ci4-api-scaffolding:^0.1
+composer require --dev dcardenasl/ci4-api-scaffolding:^0.2
 ```
 
 ## Quick Start
@@ -137,6 +137,8 @@ class Scaffolding extends BaseScaffoldingConfig
 | `php spark make:crud` | `bash vendor/bin/make-crud.sh` | Generate a full CRUD module |
 | `php spark make:crud:remove` | — | Remove a previously scaffolded module |
 | `php spark module:check` | `bash vendor/bin/validate-crud.sh` | Validate 14 post-scaffold wiring checkpoints |
+| `php spark scaffold:check` | — | Verify `Config\Scaffolding` exists and all FQCNs resolve |
+| `php spark swagger:generate` | — | Generate `public/swagger.json` from OpenAPI annotations |
 
 > Always use `vendor/bin/make-crud.sh` in non-TTY environments (CI, Claude Code, scripts). `php spark make:crud` falls back to interactive mode when `--fields` is not provided, which hangs in non-TTY contexts.
 
@@ -189,6 +191,40 @@ bash vendor/bin/validate-crud.sh <Resource> <Domain>
 ```
 
 Validates 14 post-scaffold wiring checkpoints: migration exists, table naming, soft-delete consistency, controller/model/service/route presence, `Services.php` wiring, language files, test files. Exits non-zero if any checkpoint fails.
+
+### `scaffold:check`
+
+```bash
+php spark scaffold:check
+```
+
+Read-only diagnostic — never writes files. Verifies that `app/Config/Scaffolding.php` exists, extends `BaseScaffoldingConfig`, and that all 14 FQCNs it declares (base classes, interfaces, traits) are loadable. Run after first install or after bumping `dcardenasl/ci4-api-core` to confirm the config still points at real classes.
+
+If the file is missing, the command prints the `cp` command to bootstrap a default config from the bundled example.
+
+### `swagger:generate`
+
+```bash
+php spark swagger:generate
+```
+
+Generates `public/swagger.json` from OpenAPI annotations. Scans `app/Config/OpenApi.php`, `app/Controllers/`, `app/Documentation/`, `app/DTO/`, and `vendor/dcardenasl/ci4-api-core/src/Dto/` by default. Requires `zircote/swagger-php` in the consumer's `require-dev`:
+
+```bash
+composer require --dev zircote/swagger-php
+```
+
+To scan additional directories, subclass the command and override `scanPaths()`:
+
+```php
+class MySwaggerGenerate extends \dcardenasl\Ci4ApiScaffolding\Commands\SwaggerGenerate
+{
+    protected function scanPaths(): array
+    {
+        return [...parent::scanPaths(), APPPATH . 'Modules/'];
+    }
+}
+```
 
 ## Field Types
 
