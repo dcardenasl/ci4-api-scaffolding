@@ -17,12 +17,42 @@ use PHPUnit\Framework\TestCase;
  * permission. Consumers using a different authz model (session-based,
  * OAuth scopes, anything) can swap the filter without touching the
  * package.
+ *
+ * Also covers patchMainRoutesLoader() / applyLoaderPatch() which inject
+ * the api/{version} glob loader into the app's main Routes.php.
  */
 final class RouteGeneratorTest extends TestCase
 {
     public function testBaseTemplateUsesDefaultFilters(): void
     {
+        // defaults() now ships with protectedRouteFilters: [] — no auth by default
         $generator = new RouteGenerator(ScaffoldingConfig::defaults());
+        $schema = new ResourceSchema(
+            resource: 'Product',
+            domain: 'Catalog',
+            route: 'products',
+            fields: [new Field(name: 'name', type: 'string')],
+        );
+
+        $artifacts = $generator->generate($schema);
+        $content = reset($artifacts);
+
+        $this->assertStringContainsString("['filter' => []]", $content);
+        $this->assertStringNotContainsString('jwtauth', $content);
+        $this->assertStringNotContainsString('iam.superadmin-access', $content);
+        $this->assertStringContainsString(
+            "['namespace' => '\\App\\Controllers\\Api\\V1\\Catalog']",
+            $content
+        );
+    }
+
+    public function testBaseTemplateWithExplicitFiltersRendersFilterGroup(): void
+    {
+        $generator = new RouteGenerator(
+            ScaffoldingConfig::defaults(
+                protectedRouteFilters: ['jwtauth', 'permission:iam.superadmin-access', 'throttle'],
+            ),
+        );
         $schema = new ResourceSchema(
             resource: 'Product',
             domain: 'Catalog',
@@ -35,11 +65,7 @@ final class RouteGeneratorTest extends TestCase
 
         $this->assertStringContainsString(
             "['filter' => ['jwtauth', 'permission:iam.superadmin-access', 'throttle']]",
-            $content
-        );
-        $this->assertStringContainsString(
-            "['namespace' => '\\App\\Controllers\\Api\\V1\\Catalog']",
-            $content
+            $content,
         );
     }
 
@@ -92,5 +118,67 @@ final class RouteGeneratorTest extends TestCase
         );
         $this->assertStringNotContainsString('iam.superadmin-access', $content);
         $this->assertStringNotContainsString('jwtauth', $content);
+    }
+
+    // ─── applyLoaderPatch() tests ─────────────────────────────────────────────
+
+    private function generator(): RouteGenerator
+    {
+        return new RouteGenerator(ScaffoldingConfig::defaults());
+    }
+
+    private function minimalRoutesFile(): string
+    {
+        return <<<'PHP'
+<?php
+
+use CodeIgniter\Router\RouteCollection;
+
+/** @var RouteCollection $routes */
+$routes->get('/', 'Home::index');
+PHP;
+    }
+
+    public function testApplyLoaderPatchAppendsMarckerAndGlobLoader(): void
+    {
+        $patched = $this->generator()->applyLoaderPatch($this->minimalRoutesFile(), 'v1');
+
+        $this->assertStringContainsString('// ci4-api-scaffolding: api/v1 loader start', $patched);
+        $this->assertStringContainsString('// ci4-api-scaffolding: api/v1 loader end', $patched);
+        $this->assertStringContainsString("\$routes->group('api/v1'", $patched);
+        $this->assertStringContainsString("APPPATH . 'Config/Routes/v1'", $patched);
+        $this->assertStringContainsString("glob(\$routesDir . '/*.php')", $patched);
+        $this->assertStringContainsString("basename(\$file) === 'system.php'", $patched);
+    }
+
+    public function testApplyLoaderPatchPreservesExistingContent(): void
+    {
+        $original = $this->minimalRoutesFile();
+        $patched  = $this->generator()->applyLoaderPatch($original, 'v1');
+
+        $this->assertStringContainsString("\$routes->get('/', 'Home::index')", $patched);
+    }
+
+    public function testApplyLoaderPatchUsesCorrectVersionInMarkerAndGroup(): void
+    {
+        $patched = $this->generator()->applyLoaderPatch($this->minimalRoutesFile(), 'v2');
+
+        $this->assertStringContainsString('// ci4-api-scaffolding: api/v2 loader start', $patched);
+        $this->assertStringContainsString("\$routes->group('api/v2'", $patched);
+        $this->assertStringContainsString("APPPATH . 'Config/Routes/v2'", $patched);
+        $this->assertStringNotContainsString('v1', $patched);
+    }
+
+    public function testApplyLoaderPatchPreservesHealthBlockFromCoreInstall(): void
+    {
+        $withHealth = $this->minimalRoutesFile() . "\n\n"
+            . "// ci4-api-core: health route start\n"
+            . "\$routes->get('health', static function () { return response()->setJSON([]); });\n"
+            . "// ci4-api-core: health route end\n";
+
+        $patched = $this->generator()->applyLoaderPatch($withHealth, 'v1');
+
+        $this->assertStringContainsString('// ci4-api-core: health route start', $patched);
+        $this->assertStringContainsString('// ci4-api-scaffolding: api/v1 loader start', $patched);
     }
 }

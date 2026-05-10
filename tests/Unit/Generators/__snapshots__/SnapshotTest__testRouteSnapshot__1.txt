@@ -5,7 +5,7 @@
 $routes->group('catalog', ['namespace' => '\App\Controllers\Api\V1\Catalog'], function ($routes) {
 
     // Auth & Admin Protected Group
-    $routes->group('', ['filter' => ['jwtauth', 'permission:iam.superadmin-access', 'throttle']], function ($routes) {
+    $routes->group('', ['filter' => []], function ($routes) {
         // Product Routes
         $routes->get('products', 'ProductController::index');
         $routes->get('products/(:num)', 'ProductController::show/$1');
