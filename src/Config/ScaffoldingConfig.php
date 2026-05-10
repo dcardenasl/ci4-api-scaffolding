@@ -95,8 +95,13 @@ final readonly class ScaffoldingConfig
      * Convenience factory that returns a config matching the defaults shipped
      * with ci4-api-starter — useful for tests and for consumers who haven't
      * customized anything yet.
+     *
+     * @param list<string> $protectedRouteFilters Filters for the "protected" route group.
+     *   Defaults to [] (no auth) — safe for any CI4 project. Consumers running
+     *   ci4-api-starter should pass ['jwtauth', 'permission:iam.superadmin-access', 'throttle']
+     *   (or their own filter list) via App\Config\Scaffolding::build().
      */
-    public static function defaults(): self
+    public static function defaults(array $protectedRouteFilters = []): self
     {
         return new self(
             controllerBaseClass: 'dcardenasl\\Ci4ApiCore\\Http\\ApiController',
@@ -113,7 +118,7 @@ final readonly class ScaffoldingConfig
             responseMapperImplementation: 'dcardenasl\\Ci4ApiCore\\Mappers\\DtoResponseMapper',
             servicesFactoryClass: 'Config\\Services',
             paths: new ScaffoldingPaths(),
-            protectedRouteFilters: ['jwtauth', 'permission:iam.superadmin-access', 'throttle'],
+            protectedRouteFilters: $protectedRouteFilters,
             appNamespace: 'App',
         );
     }

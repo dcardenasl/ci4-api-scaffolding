@@ -11,6 +11,7 @@ use dcardenasl\Ci4ApiScaffolding\Config\ScaffoldingConfig;
 use dcardenasl\Ci4ApiScaffolding\Core\Field;
 use dcardenasl\Ci4ApiScaffolding\Core\ResourceSchema;
 use dcardenasl\Ci4ApiScaffolding\Core\StringHelper;
+use dcardenasl\Ci4ApiScaffolding\Generators\RouteGenerator;
 use dcardenasl\Ci4ApiScaffolding\Orchestration\ScaffoldConflictException;
 use dcardenasl\Ci4ApiScaffolding\Orchestration\ScaffoldingOrchestrator;
 use dcardenasl\Ci4ApiScaffolding\Validators\FieldNameValidator;
@@ -140,6 +141,12 @@ class MakeCrud extends BaseCommand
             foreach ($createdFiles as $file) {
                 $verb = $orchestrator->wasExisting($file) ? 'UPDATED' : 'CREATED';
                 CLI::write("{$verb}: {$file}", 'green');
+            }
+
+            // 3b. Inject glob loader into Routes.php on first scaffold for this version.
+            $routeGen = new RouteGenerator($config);
+            if ($routeGen->patchMainRoutesLoader($apiVersion)) {
+                CLI::write("PATCHED: app/Config/Routes.php (api/{$apiVersion} glob loader added)", 'green');
             }
 
             // 4. Wire Services and Config (or print snippet with --no-wire)

@@ -30,8 +30,12 @@ final class TestGeneratorTest extends TestCase
 
     public function testFeatureTestExpects401WhenJwtAuthFilterIsConfigured(): void
     {
-        // Default config protects routes with `jwtauth` — anonymous GET → 401.
-        $generator = new TestGenerator(ScaffoldingConfig::defaults());
+        // Explicit jwtauth filter — anonymous GET → 401.
+        $generator = new TestGenerator(
+            ScaffoldingConfig::defaults(
+                protectedRouteFilters: ['jwtauth', 'permission:iam.superadmin-access', 'throttle'],
+            ),
+        );
 
         $featureContent = $this->extract($generator->generate($this->schema()), 'ControllerTest');
 

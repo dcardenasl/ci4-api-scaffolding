@@ -15,7 +15,13 @@ use dcardenasl\Ci4ApiScaffolding\Core\ResourceSchema;
  * The "protected" group's filter list is taken from
  * ScaffoldingConfig::$protectedRouteFilters — no longer hardcoded to a
  * specific permission. Consumers can ship their own filter convention
- * via App\Config\Scaffolding.
+ * via App\Config\Scaffolding. When the list is empty, the template emits
+ * ['filter' => []] which CI4 treats as no-op (no FilterNotFoundException).
+ *
+ * Additionally, patchMainRoutesLoader() injects a versioned glob loader
+ * into app/Config/Routes.php on first scaffold so domain route files are
+ * automatically discovered. Idempotent via markers; safe to call on every
+ * make:crud invocation.
  */
 class RouteGenerator implements CrudGeneratorInterface
 {
@@ -127,5 +133,84 @@ class RouteGenerator implements CrudGeneratorInterface
     {
         $quoted = array_map(static fn (string $f): string => "'" . addslashes($f) . "'", $this->config->protectedRouteFilters);
         return '[' . implode(', ', $quoted) . ']';
+    }
+
+    // ─── Routes.php glob loader ───────────────────────────────────────────────
+
+    /**
+     * Inject a versioned glob loader block into app/Config/Routes.php on first
+     * scaffold so all domain route files under Config/Routes/{version}/ are
+     * automatically discovered by CodeIgniter.
+     *
+     * Safe to call on every make:crud invocation — idempotent via markers.
+     * Returns true when Routes.php was patched, false when already wired or
+     * when injection was skipped (file not found, existing api group detected).
+     */
+    public function patchMainRoutesLoader(string $apiVersion): bool
+    {
+        $path = APPPATH . 'Config/Routes.php';
+
+        if (! file_exists($path)) {
+            return false;
+        }
+
+        $raw = file_get_contents($path);
+        if ($raw === false) {
+            return false;
+        }
+
+        $markerStart = $this->loaderMarkerStart($apiVersion);
+
+        if (str_contains($raw, $markerStart)) {
+            return false; // already wired
+        }
+
+        // Detect an existing api/{version} group added manually (e.g. ci4-api-starter).
+        if (str_contains($raw, "'api/{$apiVersion}'") || str_contains($raw, "\"api/{$apiVersion}\"")) {
+            return false;
+        }
+
+        $patched = $this->applyLoaderPatch($raw, $apiVersion);
+
+        return file_put_contents($path, $patched) !== false;
+    }
+
+    /**
+     * Pure string transformation — appends the glob loader block to $content.
+     * Exposed as public for unit testing without file I/O.
+     */
+    public function applyLoaderPatch(string $content, string $apiVersion): string
+    {
+        return rtrim($content) . "\n\n" . $this->loaderBlock($apiVersion) . "\n";
+    }
+
+    private function loaderBlock(string $apiVersion): string
+    {
+        $routesDir = 'Config/Routes/' . $apiVersion;
+        $groupPath = 'api/' . $apiVersion;
+
+        return $this->loaderMarkerStart($apiVersion) . "\n"
+            . "\$routes->group('{$groupPath}', function (\$routes) {\n"
+            . "    \$routesDir = APPPATH . '{$routesDir}';\n"
+            . "    if (is_dir(\$routesDir)) {\n"
+            . "        foreach (glob(\$routesDir . '/*.php') as \$file) {\n"
+            . "            if (basename(\$file) === 'system.php') {\n"
+            . "                continue;\n"
+            . "            }\n"
+            . "            require \$file;\n"
+            . "        }\n"
+            . "    }\n"
+            . "});\n"
+            . $this->loaderMarkerEnd($apiVersion);
+    }
+
+    private function loaderMarkerStart(string $apiVersion): string
+    {
+        return "// ci4-api-scaffolding: api/{$apiVersion} loader start";
+    }
+
+    private function loaderMarkerEnd(string $apiVersion): string
+    {
+        return "// ci4-api-scaffolding: api/{$apiVersion} loader end";
     }
 }

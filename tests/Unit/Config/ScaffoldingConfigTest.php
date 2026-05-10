@@ -17,11 +17,11 @@ final class ScaffoldingConfigTest extends TestCase
         $this->assertSame('App', $config->appNamespace);
         $this->assertSame('dcardenasl\\Ci4ApiCore\\Http\\ApiController', $config->controllerBaseClass);
         $this->assertSame('dcardenasl\\Ci4ApiCore\\Services\\BaseCrudService', $config->serviceBaseClass);
-        // Default protects new routes with iam.superadmin-access, the most
-        // restrictive permission seeded by RbacBootstrapSeeder. iam.admin-access
-        // was deprecated and is no longer seeded; consumers loosen this per
-        // resource as needed.
-        $this->assertSame(['jwtauth', 'permission:iam.superadmin-access', 'throttle'], $config->protectedRouteFilters);
+        // Default ships with no auth filters so the scaffolding engine works
+        // out of the box on any CI4 project. Consumers running ci4-api-starter
+        // (or any project with registered jwt/permission/throttle filters) should
+        // pass their filter list explicitly via App\Config\Scaffolding::build().
+        $this->assertSame([], $config->protectedRouteFilters);
     }
 
     public function testDefaultsPointFilterableSearchableTraitsAtTheCorePackage(): void
