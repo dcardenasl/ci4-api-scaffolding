@@ -60,10 +60,10 @@ class SwaggerGenerate extends BaseCommand
                 return EXIT_ERROR;
             }
 
-            $endpointCount    = count((array) ($openapi->paths ?? []));
-            $schemaCount      = count((array) ($openapi->components->schemas ?? []));
-            $responseCount    = count((array) ($openapi->components->responses ?? []));
-            $requestBodyCount = count((array) ($openapi->components->requestBodies ?? []));
+            $endpointCount    = count((array) $openapi->paths);
+            $schemaCount      = count((array) $openapi->components->schemas);
+            $responseCount    = count((array) $openapi->components->responses);
+            $requestBodyCount = count((array) $openapi->components->requestBodies);
 
             CLI::write('OpenAPI documentation generated successfully!', 'green');
             CLI::write('Location: ' . $outputPath, 'green');
