@@ -4,10 +4,18 @@
   "type": "library",
   "keywords": [
     "codeigniter4",
+    "codeigniter",
+    "ci4",
     "scaffolding",
     "crud",
     "generator",
-    "code-generation"
+    "code-generation",
+    "code-generator",
+    "openapi",
+    "swagger",
+    "dto",
+    "dto-first",
+    "spark"
   ],
   "homepage": "https://github.com/dcardenasl/ci4-api-scaffolding",
   "license": "MIT",
