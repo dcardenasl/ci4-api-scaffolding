@@ -3,7 +3,7 @@
 [![CI](https://github.com/dcardenasl/ci4-api-scaffolding/actions/workflows/ci.yml/badge.svg)](https://github.com/dcardenasl/ci4-api-scaffolding/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![PHP](https://img.shields.io/badge/PHP-8.2%2B-blue)](https://www.php.net/)
-[![CI4](https://img.shields.io/badge/CodeIgniter-4.6%2B-orange)](https://codeigniter.com/)
+[![CI4](https://img.shields.io/badge/CodeIgniter-4.7%2B-orange)](https://codeigniter.com/)
 [![Latest Stable Version](https://poser.pugx.org/dcardenasl/ci4-api-scaffolding/v)](https://packagist.org/packages/dcardenasl/ci4-api-scaffolding)
 [![Total Downloads](https://poser.pugx.org/dcardenasl/ci4-api-scaffolding/downloads)](https://packagist.org/packages/dcardenasl/ci4-api-scaffolding)
 
@@ -29,13 +29,13 @@ CRUD scaffolding engine for CodeIgniter 4 APIs built on [`dcardenasl/ci4-api-cor
 ## Requirements
 
 - PHP `^8.2`
-- CodeIgniter 4 `^4.6`
+- CodeIgniter 4 `^4.7`
 - [`dcardenasl/ci4-api-core`](https://packagist.org/packages/dcardenasl/ci4-api-core) `^0.5` (installed automatically as a dependency)
 
 ## Installation
 
 ```bash
-composer require --dev dcardenasl/ci4-api-scaffolding:^0.2
+composer require --dev dcardenasl/ci4-api-scaffolding:^0.3
 ```
 
 ## Quick Start
@@ -310,10 +310,9 @@ tests/Feature/Controllers/Blog/ArticleControllerTest.php
 
 | | PHP 8.2 | PHP 8.3 | PHP 8.4 |
 |---|---|---|---|
-| CI4 4.6.* | ✅ | ✅ | ✅* |
 | CI4 4.7.* | ✅ | ✅ | ✅* |
 
-\* PHP 8.4 is tested against the locked CI4 version in the `test` job. The explicit CI4-compatibility matrix covers PHP 8.2 and 8.3. CI4 4.5.x was dropped due to security advisories.
+\* PHP 8.4 is tested against the locked CI4 version in the `test` job. The explicit CI4-compatibility matrix covers PHP 8.2 and 8.3. CI4 4.5.x and 4.6.x were dropped: 4.5.x for security advisories, 4.6.x because v0.3.2 widened the floor to `^4.7`.
 
 CI runs on every push: PHPStan level 8, PHP CS Fixer, full unit suite, E2E smoke test (creates a real CI4 project and scaffolds into it). PHP 8.2 additionally collects coverage.
 
