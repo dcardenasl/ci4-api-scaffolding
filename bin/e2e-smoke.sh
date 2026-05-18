@@ -63,7 +63,7 @@ cd "$WORK_DIR"
 echo "Step 2 — Install ci4-api-core + ci4-api-scaffolding"
 # Install stable ci4-api-core before allowing dev stability,
 # to avoid Composer evaluating the dev alias and its constraints.
-composer require "dcardenasl/ci4-api-core:^0.4" \
+composer require "dcardenasl/ci4-api-core:^0.5" \
     --no-interaction --no-progress
 
 # Now allow dev packages for the local path dependency.

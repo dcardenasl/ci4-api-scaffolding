@@ -6,6 +6,12 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-05-17
+
+### Changed
+
+- **`dcardenasl/ci4-api-core` requirement widened to `^0.5.0`** — picks up `AbstractServiceClient` and the outbound HTTP config knobs introduced in core v0.5.0 (purely additive, no breaking changes for scaffolding). Consumers on core v0.4.x must upgrade before pulling this version. `bin/e2e-smoke.sh` and the README requirements section updated accordingly.
+
 ## [0.3.0] - 2026-05-10
 
 ### Added
@@ -50,6 +56,7 @@ Initial release — extracted from `dcardenasl/ci4-api-core` v0.3.0.
 - **`bin/make-crud.sh`** + **`bin/validate-crud.sh`** — shell wrappers safe for non-TTY contexts (CI, Claude Code). Exposed as Composer `bin` entries so `vendor/bin/make-crud.sh` works in consumer projects.
 - **105 tests** covering all 8 generators (including 17 snapshot tests), orchestration, validators, wiring, and commands.
 
+[0.3.1]: https://github.com/dcardenasl/ci4-api-scaffolding/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/dcardenasl/ci4-api-scaffolding/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/dcardenasl/ci4-api-scaffolding/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/dcardenasl/ci4-api-scaffolding/releases/tag/v0.1.0
