@@ -6,6 +6,12 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-17
+
+### Changed
+
+- **`dcardenasl/ci4-api-core` requirement bumped to `^0.6.0`** — alignment with platform-wide CI4 ^4.7 requirements.
+
 ### Changed
 
 - **CodeIgniter requirement widened to `^4.7`** — drops support for CI4 4.6.x; locked to 4.7.x (current stable, v4.7.2). README badge, requirements section, and compatibility matrix updated. Consumers still on 4.6 must upgrade before pulling this version.
