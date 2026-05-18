@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "be004be8cb18d9ab8c3cdaa3f1e1c3f1",
+    "content-hash": "615f3562c3871d52a43e958cc8b14255",
     "packages": [
         {
             "name": "codeigniter4/framework",
@@ -85,16 +85,16 @@
         },
         {
             "name": "dcardenasl/ci4-api-core",
-            "version": "v0.4.1",
+            "version": "v0.5.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dcardenasl/ci4-api-core.git",
-                "reference": "5cae68d6263f848fe4a7b5b715b41c7ddecccc27"
+                "reference": "57a6f438331b1c3b3fc22408f479340512836688"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dcardenasl/ci4-api-core/zipball/5cae68d6263f848fe4a7b5b715b41c7ddecccc27",
-                "reference": "5cae68d6263f848fe4a7b5b715b41c7ddecccc27",
+                "url": "https://api.github.com/repos/dcardenasl/ci4-api-core/zipball/57a6f438331b1c3b3fc22408f479340512836688",
+                "reference": "57a6f438331b1c3b3fc22408f479340512836688",
                 "shasum": ""
             },
             "require": {
@@ -113,6 +113,7 @@
             "suggest": {
                 "ext-redis": "Required to use RedisQueueManager as an alternative to the DB-backed QueueManager",
                 "monolog/monolog": "Required for JSON structured logging via JsonFormatter / MonologHandler (^3.5)",
+                "sentry/sentry": "Records outbound HTTP breadcrumbs in AbstractServiceClient (^4.0). No-op when absent.",
                 "zircote/swagger-php": "Required to auto-generate OpenAPI specs from DTO/Controller annotations (^4.10 || ^5.0 || ^6.0)"
             },
             "type": "library",
@@ -150,18 +151,26 @@
             "description": "DTO-first API runtime foundation for CodeIgniter 4: base classes, HTTP layer, services, repositories, filters, audit chain, and queue. Powers ci4-api-starter and ci4-domain-starter. Pair with dcardenasl/ci4-api-scaffolding for CRUD generation.",
             "homepage": "https://github.com/dcardenasl/ci4-api-core",
             "keywords": [
+                "Audit",
+                "CI4",
                 "api",
                 "base-classes",
+                "codeigniter",
                 "codeigniter4",
                 "dto",
+                "dto-first",
                 "foundation",
-                "rest"
+                "queue",
+                "repository-pattern",
+                "rest",
+                "rest-api",
+                "service-layer"
             ],
             "support": {
                 "issues": "https://github.com/dcardenasl/ci4-api-core/issues",
                 "source": "https://github.com/dcardenasl/ci4-api-core"
             },
-            "time": "2026-05-10T07:26:34+00:00"
+            "time": "2026-05-16T09:12:44+00:00"
         },
         {
             "name": "laminas/laminas-escaper",

@@ -32,7 +32,7 @@
   "require": {
     "php": "^8.2",
     "dcardenasl/ci4-api-core": "^0.5.0",
-    "codeigniter4/framework": "^4.6",
+    "codeigniter4/framework": "^4.7",
     "nikic/php-parser": "^5.0"
   },
   "require-dev": {
