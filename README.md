@@ -4,6 +4,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![PHP](https://img.shields.io/badge/PHP-8.2%2B-blue)](https://www.php.net/)
 [![CI4](https://img.shields.io/badge/CodeIgniter-4.6%2B-orange)](https://codeigniter.com/)
+[![Latest Stable Version](https://poser.pugx.org/dcardenasl/ci4-api-scaffolding/v)](https://packagist.org/packages/dcardenasl/ci4-api-scaffolding)
+[![Total Downloads](https://poser.pugx.org/dcardenasl/ci4-api-scaffolding/downloads)](https://packagist.org/packages/dcardenasl/ci4-api-scaffolding)
 
 CRUD scaffolding engine for CodeIgniter 4 APIs built on [`dcardenasl/ci4-api-core`](https://github.com/dcardenasl/ci4-api-core). One command generates DTOs, service, controller, migration, routes, language files, and tests — all wired to the `ci4-api-core` base classes.
 
@@ -22,12 +24,13 @@ CRUD scaffolding engine for CodeIgniter 4 APIs built on [`dcardenasl/ci4-api-cor
 - [Compatibility Matrix](#compatibility-matrix)
 - [Development](#development)
 - [Troubleshooting](#troubleshooting)
+- [Example Project](#example-project)
 
 ## Requirements
 
 - PHP `^8.2`
 - CodeIgniter 4 `^4.6`
-- [`dcardenasl/ci4-api-core`](https://packagist.org/packages/dcardenasl/ci4-api-core) `^0.4` (installed automatically as a dependency)
+- [`dcardenasl/ci4-api-core`](https://packagist.org/packages/dcardenasl/ci4-api-core) `^0.5` (installed automatically as a dependency)
 
 ## Installation
 
@@ -368,6 +371,10 @@ pkill -f 'spark serve'; php spark serve --port 8080 &
 
 **`module:check` fails on a valid module**
 Run `php spark module:check <Resource> --domain <Domain>` to see which of the 14 checkpoints failed and why.
+
+## Example Project
+
+[**ci4-api-core-example**](https://github.com/dcardenasl/ci4-api-core-example) is a complete, runnable Catalog API (Categories + Products) built entirely with this scaffolding engine — minimal hand-written code. Each step is a separate git commit so you can trace exactly what `make-crud.sh` generates, from a blank CI4 project to a production-ready API with filtering, searching, pagination, and OpenAPI docs.
 
 ## License
 

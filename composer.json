@@ -4,10 +4,18 @@
   "type": "library",
   "keywords": [
     "codeigniter4",
+    "codeigniter",
+    "ci4",
     "scaffolding",
     "crud",
     "generator",
-    "code-generation"
+    "code-generation",
+    "code-generator",
+    "openapi",
+    "swagger",
+    "dto",
+    "dto-first",
+    "spark"
   ],
   "homepage": "https://github.com/dcardenasl/ci4-api-scaffolding",
   "license": "MIT",
@@ -23,8 +31,8 @@
   },
   "require": {
     "php": "^8.2",
-    "dcardenasl/ci4-api-core": "^0.4.1",
-    "codeigniter4/framework": "^4.6",
+    "dcardenasl/ci4-api-core": "^0.5.0",
+    "codeigniter4/framework": "^4.7",
     "nikic/php-parser": "^5.0"
   },
   "require-dev": {
