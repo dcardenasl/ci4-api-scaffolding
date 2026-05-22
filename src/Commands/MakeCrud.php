@@ -222,15 +222,13 @@ class MakeCrud extends BaseCommand
             return $userConfig->build();
         }
 
-        CLI::write(
-            "⚠ No Config\\Scaffolding found — using bundled defaults. "
+        throw new \RuntimeException(
+            "Config\\Scaffolding not found.\n"
             . "Create app/Config/Scaffolding.php extending "
             . "dcardenasl\\Ci4ApiScaffolding\\Config\\BaseScaffoldingConfig "
-            . "to customize paths, base classes, and route filters.",
-            'yellow'
+            . "before running make:crud.\n"
+            . "Projects that need no auth can set protectedRouteFilters: [] explicitly."
         );
-
-        return ScaffoldingConfig::defaults();
     }
 
     /** @return list<Field> */
