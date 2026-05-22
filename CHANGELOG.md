@@ -6,6 +6,23 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-22
+
+### Changed
+
+- **`MakeCrud` throws `RuntimeException` when `App\Config\Scaffolding` is not found** instead of silently falling back to empty `protectedRouteFilters`. Previously a yellow warning was printed and scaffolding continued with no auth filters, producing fully open routes. Consumers must have `app/Config/Scaffolding.php` extending `BaseScaffoldingConfig` before running `make:crud`.
+- **`dcardenasl/ci4-api-core` requirement bumped to `^0.7.0`** — picks up `findBy()` and `AbstractIntrospectionFilter`.
+
+### Fixed
+
+- `TestGenerator` now recognises `domainauth` as an auth filter (alongside `jwtauth` and `auth`). Domain apps using `domainauth` now get `assertStatus(401)` smoke tests instead of the open-route 200/404 variants.
+- Feature test template now generates two smoke test methods: `testIndexSmoke()` (expects 200 for an open route, 401 when gated) and `testShowNotFound()` (expects 404 for an open route, 401 when gated). Previously a single test asserted 404 on the index endpoint, which is incorrect for an empty collection.
+
+### Added
+
+- `ConfigWireman` auto-registers three permissions (`{resource}.read`, `{resource}.write`, `{resource}.delete`) into `app/Config/DomainPermissions.php` when it exists. Idempotent — re-running scaffolding on the same resource is safe.
+- `Service.php.tpl` and `ServiceInterface.php.tpl` include a comment guiding developers to throw `\BadMethodCallException` in custom method stubs until they are fully implemented.
+
 ## [0.4.0] - 2026-05-17
 
 ### Changed
