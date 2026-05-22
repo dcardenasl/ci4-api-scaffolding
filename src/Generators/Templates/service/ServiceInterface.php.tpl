@@ -8,5 +8,7 @@ use {contractFqcn};
 
 interface {resource}ServiceInterface extends {contractShort}
 {
-    // Add resource-specific service methods here if needed.
+    // Declare resource-specific service methods here.
+    // Implement them in {resource}Service; until ready, throw:
+    //   throw new \BadMethodCallException(__METHOD__ . ' not implemented');
 }

@@ -43,15 +43,17 @@ final class TestGeneratorTest extends TestCase
         $this->assertStringNotContainsString('assertStatus(404)', $featureContent);
     }
 
-    public function testFeatureTestExpects404WhenNoAuthFilterIsConfigured(): void
+    public function testFeatureTestExpects200IndexAnd404ShowWhenNoAuthFilterIsConfigured(): void
     {
-        // An open API (e.g. lookup-only kit, or a domain that lifts JWT) — anonymous GET on a
-        // missing resource → 404. The smoke test must adapt instead of demanding 401.
+        // An open API (e.g. lookup-only kit, or a domain that lifts JWT):
+        // - index (GET /resource) must return 200 even when the DB is empty
+        // - show (GET /resource/99999) must return 404 for a non-existent record
         $config = $this->configWithFilters(['throttle']);
         $generator = new TestGenerator($config);
 
         $featureContent = $this->extract($generator->generate($this->schema()), 'ControllerTest');
 
+        $this->assertStringContainsString('assertStatus(200)', $featureContent);
         $this->assertStringContainsString('assertStatus(404)', $featureContent);
         $this->assertStringNotContainsString('assertStatus(401)', $featureContent);
     }
@@ -65,6 +67,19 @@ final class TestGeneratorTest extends TestCase
         $featureContent = $this->extract($generator->generate($this->schema()), 'ControllerTest');
 
         $this->assertStringContainsString('assertStatus(401)', $featureContent);
+    }
+
+    public function testFeatureTestExpects401WhenDomainAuthFilterIsConfigured(): void
+    {
+        // Domain apps use 'domainauth' instead of 'jwtauth' — must still trigger the 401 path.
+        $config = $this->configWithFilters(['domainauth', 'permission:items.read', 'throttle']);
+        $generator = new TestGenerator($config);
+
+        $featureContent = $this->extract($generator->generate($this->schema()), 'ControllerTest');
+
+        $this->assertStringContainsString('assertStatus(401)', $featureContent);
+        $this->assertStringNotContainsString('assertStatus(200)', $featureContent);
+        $this->assertStringNotContainsString('assertStatus(404)', $featureContent);
     }
 
     private function schema(): ResourceSchema

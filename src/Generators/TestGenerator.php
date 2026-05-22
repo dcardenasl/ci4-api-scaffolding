@@ -85,16 +85,15 @@ class TestGenerator implements CrudGeneratorInterface
         // See RouteGenerator::baseTemplate().
         $fullPath = '/api/v1/' . StringHelper::toKebab($schema->domain) . '/' . $schema->route;
 
-        // Pick the expected unauthenticated status from the route's protected
-        // filter list. When the route is gated by a JWT/auth/api-key filter, an
-        // anonymous GET must hit 401. With no auth filter, the route is open
-        // and the controller's index will respond — but the resource won't
-        // exist yet, so 404 is the contract that gives the smoke test
-        // something concrete to assert.
+        // Determine whether any auth filter gates the route group.
+        // When gated: unauthenticated requests return 401 for all endpoints.
+        // When open: the index endpoint returns 200 (empty list is still 200);
+        // a request for a non-existent resource returns 404.
         $expectsAuth = false;
         foreach ($this->config->protectedRouteFilters as $filter) {
             if (
                 str_starts_with($filter, 'jwtauth')
+                || str_starts_with($filter, 'domainauth')
                 || str_starts_with($filter, 'auth')
                 || $filter === 'appKeyRequired'
             ) {
@@ -102,18 +101,20 @@ class TestGenerator implements CrudGeneratorInterface
                 break;
             }
         }
-        $expectedStatus = $expectsAuth ? 401 : 404;
-        $authReason = $expectsAuth
-            ? 'wraps every endpoint in an auth filter, so an unauthenticated request must return 401'
-            : 'is open, so a request for a missing resource must return 404';
+        $indexStatus = $expectsAuth ? 401 : 200;
+        $showStatus  = $expectsAuth ? 401 : 404;
+        $authReason  = $expectsAuth
+            ? 'wraps every endpoint in an auth filter — an unauthenticated request returns 401'
+            : 'is open — the index returns an empty list (200) and a non-existent resource returns 404';
 
         return $this->renderer->render('tests/FeatureTest', [
-            'domain'         => $schema->domain,
-            'resource'       => $resource,
-            'authReason'     => $authReason,
-            'appNamespace'   => $this->config->appNamespace,
-            'fullPath'       => $fullPath,
-            'expectedStatus' => (string) $expectedStatus,
+            'domain'       => $schema->domain,
+            'resource'     => $resource,
+            'authReason'   => $authReason,
+            'appNamespace' => $this->config->appNamespace,
+            'fullPath'     => $fullPath,
+            'indexStatus'  => (string) $indexStatus,
+            'showStatus'   => (string) $showStatus,
         ]);
     }
 }

@@ -10,7 +10,7 @@ use CodeIgniter\Test\FeatureTestTrait;
 
 /**
  * HTTP smoke test for ProductController. The configured route group
- * is open, so a request for a missing resource must return 404 — a sufficient signal that the route was registered and wired.
+ * is open — the index returns an empty list (200) and a non-existent resource returns 404 — a sufficient signal that the route was registered and wired.
  *
  * Extend with authenticated 200 flows as business rules solidify.
  *
@@ -29,6 +29,13 @@ final class ProductControllerTest extends CIUnitTestCase
     public function testIndexSmoke(): void
     {
         $result = $this->get('/api/v1/catalog/products');
+
+        $result->assertStatus(200);
+    }
+
+    public function testShowNotFound(): void
+    {
+        $result = $this->get('/api/v1/catalog/products/99999');
 
         $result->assertStatus(404);
     }

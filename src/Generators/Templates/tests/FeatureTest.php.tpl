@@ -30,6 +30,13 @@ final class {resource}ControllerTest extends CIUnitTestCase
     {
         $result = $this->get('{fullPath}');
 
-        $result->assertStatus({expectedStatus});
+        $result->assertStatus({indexStatus});
+    }
+
+    public function testShowNotFound(): void
+    {
+        $result = $this->get('{fullPath}/99999');
+
+        $result->assertStatus({showStatus});
     }
 }

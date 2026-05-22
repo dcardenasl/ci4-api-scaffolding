@@ -74,6 +74,9 @@ class ConfigWireman
         // 2. Service factory inside the trait
         $this->injectServiceAndMapper($schema, $domainTraitFile);
         $this->verifyServiceFactoryInjection($schema, $domainTraitFile);
+
+        // 3. Permissions registration
+        $this->registerPermissions($schema);
     }
 
     /**
@@ -94,6 +97,59 @@ class ConfigWireman
             'service_method' => $this->serviceFactorySnippet($schema),
             'services_register' => $this->servicesRegisterSnippet($domain),
         ];
+    }
+
+    private function registerPermissions(ResourceSchema $schema): void
+    {
+        $permissionsFile = APPPATH . 'Config/DomainPermissions.php';
+        if (!file_exists($permissionsFile)) {
+            return;
+        }
+
+        $resource = $schema->getResourceLower();
+        $content = (string) file_get_contents($permissionsFile);
+
+        if (str_contains($content, "{$resource}.read")) {
+            return; // Idempotent
+        }
+
+        $newPermissions = [
+            ['code' => "{$resource}.read", 'resource' => "{$resource}", 'action' => 'read', 'description' => "Read " . $schema->resource],
+            ['code' => "{$resource}.write", 'resource' => "{$resource}", 'action' => 'write', 'description' => "Create or update " . $schema->resource],
+            ['code' => "{$resource}.delete", 'resource' => "{$resource}", 'action' => 'delete', 'description' => "Delete " . $schema->resource],
+        ];
+
+        $edited = $this->astEditor->edit($content, function (array &$stmts) use ($newPermissions): bool {
+            $finder = new NodeFinder();
+            $class = $finder->findFirstInstanceOf($stmts, Node\Stmt\Class_::class);
+            if ($class === null || $class->name?->name !== 'DomainPermissions') {
+                return false;
+            }
+
+            foreach ($class->stmts as $stmt) {
+                if ($stmt instanceof Node\Stmt\ClassConst && $stmt->consts[0]->name->name === 'PERMISSIONS') {
+                    $array = $stmt->consts[0]->value;
+                    if ($array instanceof Node\Expr\Array_) {
+                        foreach ($newPermissions as $perm) {
+                            $array->items[] = new Node\Expr\ArrayItem(
+                                new Node\Expr\Array_([
+                                    new Node\Expr\ArrayItem(new Node\Scalar\String_($perm['code']), new Node\Scalar\String_('code')),
+                                    new Node\Expr\ArrayItem(new Node\Scalar\String_($perm['resource']), new Node\Scalar\String_('resource')),
+                                    new Node\Expr\ArrayItem(new Node\Scalar\String_($perm['action']), new Node\Scalar\String_('action')),
+                                    new Node\Expr\ArrayItem(new Node\Scalar\String_($perm['description']), new Node\Scalar\String_('description')),
+                                ])
+                            );
+                        }
+                        return true;
+                    }
+                }
+            }
+            return false;
+        });
+
+        if ($edited !== null) {
+            file_put_contents($permissionsFile, $edited);
+        }
     }
 
     private function createDomainTrait(string $domain, string $path): void
