@@ -8,5 +8,7 @@ use dcardenasl\Ci4ApiCore\Services\CrudServiceContract;
 
 interface ProductServiceInterface extends CrudServiceContract
 {
-    // Add resource-specific service methods here if needed.
+    // Declare resource-specific service methods here.
+    // Implement them in ProductService; until ready, throw:
+    //   throw new \BadMethodCallException(__METHOD__ . ' not implemented');
 }
