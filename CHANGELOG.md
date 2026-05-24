@@ -6,6 +6,12 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.5.1] — 2026-05-24
+
+### Added
+
+- `.github/workflows/release.yml` — tag-triggered GitHub Release workflow that extracts the matching CHANGELOG section and publishes it automatically.
+
 ## [0.5.0] - 2026-05-22
 
 ### Changed
