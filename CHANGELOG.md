@@ -6,6 +6,13 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.5.2] — 2026-05-24
+
+### Fixed
+
+- `bin/e2e-smoke.sh`: seed project now requires `dcardenasl/ci4-api-core:^0.7.0` instead of `^0.6.0`, resolving a Composer conflict when installing the dev version of this package against a fresh CI4 project.
+- `composer.lock`: updated `dcardenasl/ci4-api-core` from `v0.6.0` to `v0.7.2`.
+
 ## [0.5.1] — 2026-05-24
 
 ### Added
