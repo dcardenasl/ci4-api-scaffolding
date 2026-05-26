@@ -10,6 +10,7 @@ use {reqDtoNs}\{resource}IndexRequestDTO;
 use {reqDtoNs}\{resource}UpdateRequestDTO;
 use {interfaceNs}\{resource}ServiceInterface;
 use CodeIgniter\HTTP\ResponseInterface;
+use dcardenasl\Ci4ApiCore\Dto\SecurityContext;
 use {servicesFactoryFqcn};{traitImports}
 
 class {resource}Controller extends {controllerBaseShort}
@@ -40,18 +41,22 @@ class {resource}Controller extends {controllerBaseShort}
     public function update(int $id): ResponseInterface
     {
         return $this->handleRequest(
-            fn ($dto, $context) => $this->{resourceLower}Service->update($id, $dto, $context),
+            fn ({resource}UpdateRequestDTO $dto, SecurityContext $context): mixed => $this->{resourceLower}Service->update($id, $dto, $context),
             {resource}UpdateRequestDTO::class
         );
     }
 
     public function show(int $id): ResponseInterface
     {
-        return $this->handleRequest(fn ($dto, $context) => $this->{resourceLower}Service->show($id, $context));
+        return $this->handleRequest(
+            fn (array $dto, SecurityContext $context): mixed => $this->{resourceLower}Service->show($id, $context)
+        );
     }
 
     public function delete(int $id): ResponseInterface
     {
-        return $this->handleRequest(fn ($dto, $context) => $this->{resourceLower}Service->destroy($id, $context));
+        return $this->handleRequest(
+            fn (array $dto, SecurityContext $context): mixed => $this->{resourceLower}Service->destroy($id, $context)
+        );
     }
 }

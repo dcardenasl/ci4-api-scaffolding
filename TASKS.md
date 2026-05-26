@@ -2,7 +2,7 @@
 
 > Fuente de verdad para trabajo en este repo.
 > Si una tarea impacta a consumers, referenciar también `../TASKS.md`.
-> Última actualización: 2026-05-24 (backlog creado desde la auditoría del bootstrap `ci4-catalog`)
+> Última actualización: 2026-05-26 (SCAF-004 completado; backlog base creado desde la auditoría del bootstrap `ci4-catalog`)
 
 ---
 
@@ -19,6 +19,11 @@
 ---
 
 ## ✅ Completadas
+
+### SCAF-004 — Plantillas del motor con tipos explícitos (2026-05-26)
+- **Qué**: `DtoGenerator` ahora emite docblocks `@return array<string, string>` / `@param array<string, mixed>` en todos los request DTOs y `ResponseDTO`. El `Controller` generado también tipa explícitamente las closures de `handleRequest()` con `SecurityContext` y `mixed`, y `UpdateRequestDTO` usa una closure `static fn (mixed $value): bool` para su `array_filter()`.
+- **Por qué**: cerrar la deuda de contrato del scaffold para que el código generado sea más legible para humanos y más estable para análisis estático downstream.
+- **Verificado**: `composer analyse` limpio, `composer test` limpio, snapshots actualizadas.
 
 ### SCAF-003 — Contrato `bool` → `boolean_like` explícito
 - **Qué**: se decidió mantener `bool -> boolean_like` como parte del contrato soportado por los starters oficiales, en lugar de introducir una estrategia configurable por target dentro del scaffolder. `README.md` ahora lo deja explícito para consumers no-starter.

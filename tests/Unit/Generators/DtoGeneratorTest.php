@@ -38,6 +38,46 @@ final class DtoGeneratorTest extends TestCase
                 $content,
                 "Request DTO {$path} must not declare rules() as protected"
             );
+            $this->assertStringContainsString(
+                '@return array<string, string>',
+                $content,
+                "Request DTO {$path} must document rules() as a keyed string array"
+            );
+            $this->assertStringContainsString(
+                '@param array<string, mixed> $data',
+                $content,
+                "Request DTO {$path} must document the input payload shape"
+            );
+            $this->assertStringContainsString(
+                '@return array<string, mixed>',
+                $content,
+                "Request DTO {$path} must document toArray() as an associative payload"
+            );
         }
+    }
+
+    public function testGeneratedResponseDtoDocumentsArrayShapes(): void
+    {
+        $generator = new DtoGenerator(ScaffoldingConfig::defaults());
+        $schema = new ResourceSchema(
+            resource: 'Product',
+            domain: 'Catalog',
+            route: 'products',
+            fields: [new Field(name: 'name', type: 'string', required: true)],
+        );
+
+        $artifacts = $generator->generate($schema);
+        $response = '';
+        foreach ($artifacts as $path => $content) {
+            if (str_contains($path, 'ResponseDTO')) {
+                $response = $content;
+                break;
+            }
+        }
+
+        $this->assertNotEmpty($response);
+        $this->assertStringContainsString('@param array<string, mixed> $data', $response);
+        $this->assertStringContainsString('public static function fromArray(array $data): static', $response);
+        $this->assertStringContainsString('@return array<string, mixed>', $response);
     }
 }

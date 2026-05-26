@@ -15,6 +15,9 @@ readonly class {resource}IndexRequestDTO extends {baseShort}
     public ?string $search;
     public string $sort;
 
+    /**
+     * @return array<string, string>
+     */
     public function rules(): array
     {
         return [
@@ -25,6 +28,9 @@ readonly class {resource}IndexRequestDTO extends {baseShort}
         ];
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     protected function map(array $data): void
     {
         $this->page = isset($data['page']) ? (int) $data['page'] : 1;
@@ -33,6 +39,9 @@ readonly class {resource}IndexRequestDTO extends {baseShort}
         $this->sort = (string) ($data['sort'] ?? '');
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return [

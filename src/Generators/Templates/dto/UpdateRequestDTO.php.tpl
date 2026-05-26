@@ -11,19 +11,28 @@ use OpenApi\Attributes as OA;
 readonly class {resource}UpdateRequestDTO extends {baseShort}
 {
 {properties}
+    /**
+     * @return array<string, string>
+     */
     public function rules(): array
     {
         return [
 {rules}        ];
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     protected function map(array $data): void
     {
 {mappings}    }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return array_filter([
-{toArray}        ], fn($v) => $v !== null);
+{toArray}        ], static fn (mixed $value): bool => $value !== null);
     }
 }
