@@ -28,7 +28,7 @@ final class FieldNameValidatorTest extends TestCase
             new Field(name: 'is_active', type: 'bool'),
         ]);
 
-        $this->assertTrue(true); // No exception = pass
+        $this->addToAssertionCount(1);
     }
 
     public function testRejectsPhpReservedKeyword(): void
@@ -116,7 +116,7 @@ final class FieldNameValidatorTest extends TestCase
         $this->validator->validate([
             new Field(name: 'is_paid', type: 'bool', required: true, nullable: false),
         ]);
-        $this->assertTrue(true);
+        $this->addToAssertionCount(1);
     }
 
     public function testBoolWithNullableModifierIsAccepted(): void
@@ -124,6 +124,6 @@ final class FieldNameValidatorTest extends TestCase
         $this->validator->validate([
             new Field(name: 'is_paid', type: 'bool', required: false, nullable: true),
         ]);
-        $this->assertTrue(true);
+        $this->addToAssertionCount(1);
     }
 }

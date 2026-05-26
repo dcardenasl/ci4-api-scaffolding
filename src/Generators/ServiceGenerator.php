@@ -59,6 +59,8 @@ class ServiceGenerator implements CrudGeneratorInterface
         $resourceLower = $schema->getResourceLower();
         $ns = $this->config->namespaceFor($this->config->paths->services) . '\\' . $schema->domain;
         $interfaceNs = $this->config->namespaceFor($this->config->paths->interfaces) . '\\' . $schema->domain;
+        $entityNs = $this->config->namespaceFor($this->config->paths->entities);
+        $entityFqcn = $entityNs . '\\' . $schema->resource . 'Entity';
         $repoFqcn = $this->config->repositoryInterface;
         $repoShort = Fqcn::shortName($repoFqcn);
         $mapperFqcn = $this->config->responseMapperInterface;
@@ -68,6 +70,7 @@ class ServiceGenerator implements CrudGeneratorInterface
 
         return $this->renderer->render('service/Service', [
             'ns'               => $ns,
+            'entityFqcn'       => $entityFqcn,
             'repoFqcn'         => $repoFqcn,
             'repoShort'        => $repoShort,
             'mapperFqcn'       => $mapperFqcn,

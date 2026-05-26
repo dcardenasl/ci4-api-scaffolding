@@ -20,6 +20,21 @@ use PHPUnit\Framework\TestCase;
  */
 final class ServiceGeneratorTest extends TestCase
 {
+    /**
+     * @param array<string, string> $artifacts
+     */
+    private function artifactPath(array $artifacts, string $needle): string
+    {
+        $matches = array_filter(
+            array_keys($artifacts),
+            static fn (string $path): bool => str_contains($path, $needle),
+        );
+
+        $this->assertCount(1, $matches, 'Expected exactly one artifact matching ' . $needle);
+
+        return array_values($matches)[0];
+    }
+
     public function testOutputUsesDefaultsWhenConfigDefaultsAreUsed(): void
     {
         $generator = new ServiceGenerator(ScaffoldingConfig::defaults());
@@ -32,13 +47,16 @@ final class ServiceGeneratorTest extends TestCase
 
         $artifacts = $generator->generate($schema);
 
-        $servicePath = APPPATH . 'Services/Catalog/ProductService.php';
+        $servicePath = $this->artifactPath($artifacts, 'Services/Catalog/ProductService.php');
         $this->assertArrayHasKey($servicePath, $artifacts);
 
         $service = $artifacts[$servicePath];
         $this->assertStringContainsString('namespace App\\Services\\Catalog;', $service);
+        $this->assertStringContainsString('use App\\Entities\\ProductEntity;', $service);
         $this->assertStringContainsString('use dcardenasl\\Ci4ApiCore\\Services\\BaseCrudService;', $service);
+        $this->assertStringContainsString('@extends BaseCrudService<ProductEntity>', $service);
         $this->assertStringContainsString('extends BaseCrudService', $service);
+        $this->assertStringContainsString('@param RepositoryInterface<ProductEntity> $productRepository', $service);
     }
 
     public function testOutputHonorsCustomConfig(): void
@@ -76,8 +94,8 @@ final class ServiceGeneratorTest extends TestCase
 
         $artifacts = $generator->generate($schema);
 
-        $servicePath = APPPATH . 'App/Domain/Sales/OrderService.php';
-        $interfacePath = APPPATH . 'App/Contracts/Sales/OrderServiceInterface.php';
+        $servicePath = $this->artifactPath($artifacts, 'App/Domain/Sales/OrderService.php');
+        $interfacePath = $this->artifactPath($artifacts, 'App/Contracts/Sales/OrderServiceInterface.php');
         $this->assertArrayHasKey($servicePath, $artifacts);
         $this->assertArrayHasKey($interfacePath, $artifacts);
 
@@ -88,7 +106,9 @@ final class ServiceGeneratorTest extends TestCase
         $this->assertStringContainsString('use Acme\\App\\Persistence\\RepoContract;', $service);
         $this->assertStringContainsString('use Acme\\App\\Mappers\\MapperContract;', $service);
         $this->assertStringContainsString('use Acme\\App\\Contracts\\Sales\\OrderServiceInterface;', $service);
+        $this->assertStringContainsString('use Acme\\Entities\\OrderEntity;', $service);
         $this->assertStringContainsString('use Acme\\App\\Services\\Crud\\AbstractCrud;', $service);
+        $this->assertStringContainsString('@extends AbstractCrud<OrderEntity>', $service);
 
         // Class declaration uses short names of the custom base classes.
         $this->assertStringContainsString('extends AbstractCrud', $service);
@@ -97,6 +117,7 @@ final class ServiceGeneratorTest extends TestCase
         // Constructor params are typed by the custom interface short names.
         $this->assertStringContainsString('RepoContract $orderRepository', $service);
         $this->assertStringContainsString('MapperContract $responseMapper', $service);
+        $this->assertStringContainsString('@param RepoContract<OrderEntity> $orderRepository', $service);
 
         // No leakage of the `App\…` defaults.
         $this->assertStringNotContainsString('App\\Services\\Core', $service);

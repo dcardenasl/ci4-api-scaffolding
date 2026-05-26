@@ -16,7 +16,7 @@ class ProductController extends ApiController
 {
     protected ProductServiceInterface $productService;
 
-    protected function resolveDefaultService(): object
+    protected function resolveDefaultService(): ProductServiceInterface
     {
         $this->productService = Services::productService();
 

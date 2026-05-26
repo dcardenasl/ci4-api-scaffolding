@@ -16,7 +16,7 @@ class {resource}Controller extends {controllerBaseShort}
 {{traitUseBlock}
     protected {resource}ServiceInterface ${resourceLower}Service;
 
-    protected function resolveDefaultService(): object
+    protected function resolveDefaultService(): {resource}ServiceInterface
     {
         $this->{resourceLower}Service = {servicesFactoryShort}::{resourceLower}Service();
 

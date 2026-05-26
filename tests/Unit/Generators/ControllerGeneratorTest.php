@@ -12,6 +12,9 @@ use PHPUnit\Framework\TestCase;
 
 final class ControllerGeneratorTest extends TestCase
 {
+    /**
+     * @param array<string, string> $traits
+     */
     private static function defaultsWithTraits(array $traits): ScaffoldingConfig
     {
         $d = ScaffoldingConfig::defaults();
@@ -56,6 +59,7 @@ final class ControllerGeneratorTest extends TestCase
         }
 
         $this->assertNotEmpty($controllerContent);
+        $this->assertStringContainsString('protected function resolveDefaultService(): ProductServiceInterface', $controllerContent);
         $this->assertStringNotContainsString('use HasSlugActions;', $controllerContent);
     }
 
@@ -84,6 +88,7 @@ final class ControllerGeneratorTest extends TestCase
 
         $this->assertStringContainsString('use App\\Traits\\Controllers\\HasSlugActions;', $controllerContent);
         $this->assertStringContainsString('use HasSlugActions;', $controllerContent);
+        $this->assertStringContainsString('protected function resolveDefaultService(): ArticleServiceInterface', $controllerContent);
     }
 
     public function testConditionalTraitNotInjectedWhenFieldAbsent(): void
