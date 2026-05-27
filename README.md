@@ -36,7 +36,7 @@ CRUD scaffolding engine for CodeIgniter 4 APIs built on [`dcardenasl/ci4-api-cor
 ## Installation
 
 ```bash
-composer require --dev dcardenasl/ci4-api-scaffolding:^0.5
+composer require --dev dcardenasl/ci4-api-scaffolding:^0.6
 ```
 
 ## Quick Start

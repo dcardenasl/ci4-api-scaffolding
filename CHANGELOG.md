@@ -6,6 +6,20 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-05-27
+
+### Added
+
+- **Typed scaffold stubs** — generated controllers, DTOs, and services now include explicit PHP and PHPDoc types:
+  - `Controller.php.tpl`: `resolveDefaultService()` returns the concrete `ServiceInterface`; `handleRequest` closures carry typed `DTO` and `SecurityContext` parameters.
+  - `CreateRequestDTO.php.tpl`, `IndexRequestDTO.php.tpl`, `UpdateRequestDTO.php.tpl`, `ResponseDTO.php.tpl`: PHPDoc annotations for `rules(): array<string, string>`, `map(array<string, mixed>): void`, and `toArray(): array<string, mixed>`.
+  - `Service.php.tpl`: `@extends BaseCrudService<TEntity>` and `@param Repository<TEntity>` PHPDoc on the constructor. `SecurityContext` import added.
+- `TypeMapperCompatibilityTest` — unit test that locks the `bool` ↔ PHP-type compatibility contract to prevent silent regressions.
+
+### Changed
+
+- **`dcardenasl/ci4-api-core` requirement bumped to `^0.8.0`** — picks up `RateLimitResponseHelpers`, `app_id` awareness, and the generic repository/service typing that the new typed stubs reference.
+
 ## [0.5.2] — 2026-05-24
 
 ### Fixed
