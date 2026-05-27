@@ -4,13 +4,20 @@ declare(strict_types=1);
 
 namespace App\Services\Catalog;
 
+use App\Entities\ProductEntity;
 use dcardenasl\Ci4ApiCore\Repositories\RepositoryInterface;
 use dcardenasl\Ci4ApiCore\Mappers\ResponseMapperInterface;
 use App\Interfaces\Catalog\ProductServiceInterface;
 use dcardenasl\Ci4ApiCore\Services\BaseCrudService;
 
+/**
+ * @extends BaseCrudService<ProductEntity>
+ */
 class ProductService extends BaseCrudService implements ProductServiceInterface
 {
+    /**
+     * @param RepositoryInterface<ProductEntity> $productRepository
+     */
     public function __construct(
         RepositoryInterface $productRepository,
         ResponseMapperInterface $responseMapper

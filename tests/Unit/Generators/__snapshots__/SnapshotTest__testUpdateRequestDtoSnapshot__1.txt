@@ -17,6 +17,9 @@ readonly class ProductUpdateRequestDTO extends BaseRequestDTO
     #[OA\Property(description: 'in_stock', type: 'boolean', nullable: true)]
     public ?bool $in_stock;
 
+    /**
+     * @return array<string, string>
+     */
     public function rules(): array
     {
         return [
@@ -26,6 +29,9 @@ readonly class ProductUpdateRequestDTO extends BaseRequestDTO
         ];
     }
 
+    /**
+     * @param array<string, mixed> $data
+     */
     protected function map(array $data): void
     {
         $this->name = $data['name'] ?? null;
@@ -33,12 +39,15 @@ readonly class ProductUpdateRequestDTO extends BaseRequestDTO
         $this->in_stock = isset($data['in_stock']) ? (bool) $data['in_stock'] : null;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return array_filter([
             'name' => $this->name,
             'price' => $this->price,
             'in_stock' => $this->in_stock,
-        ], fn($v) => $v !== null);
+        ], static fn (mixed $value): bool => $value !== null);
     }
 }

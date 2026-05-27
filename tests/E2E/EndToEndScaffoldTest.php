@@ -225,7 +225,6 @@ final class EndToEndScaffoldTest extends TestCase
             $stmts  = $parser->parse($source) ?? [];
         } catch (\PhpParser\Error $e) {
             $this->fail("PHP-Parser error in {$path}: " . $e->getMessage());
-            return; // unreachable, satisfies static analysis
         }
 
         $declare = (new NodeFinder())->findFirstInstanceOf($stmts, \PhpParser\Node\Stmt\Declare_::class);
@@ -258,7 +257,6 @@ final class EndToEndScaffoldTest extends TestCase
             $stmts  = $parser->parse($source) ?? [];
         } catch (\PhpParser\Error $e) {
             $this->fail("PHP-Parser error in {$path}: " . $e->getMessage());
-            return;
         }
 
         $ns = (new NodeFinder())->findFirstInstanceOf($stmts, \PhpParser\Node\Stmt\Namespace_::class);

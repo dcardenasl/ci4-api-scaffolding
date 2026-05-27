@@ -24,6 +24,9 @@ final readonly class {resource}ResponseDTO implements {ifaceShort}
         public ?string $updatedAt = null
     ) {}
 
+    /**
+     * @param array<string, mixed> $data
+     */
     public static function fromArray(array $data): static
     {
         return new static(
@@ -33,6 +36,9 @@ final readonly class {resource}ResponseDTO implements {ifaceShort}
         );
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(): array
     {
         return [

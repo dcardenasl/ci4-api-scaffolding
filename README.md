@@ -21,6 +21,7 @@ CRUD scaffolding engine for CodeIgniter 4 APIs built on [`dcardenasl/ci4-api-cor
 - [Field Types](#field-types)
 - [Field Modifiers](#field-modifiers)
 - [Generated Artifacts](#generated-artifacts)
+- [Scaffolding Boundaries](#scaffolding-boundaries)
 - [Compatibility Matrix](#compatibility-matrix)
 - [Development](#development)
 - [Troubleshooting](#troubleshooting)
@@ -35,7 +36,7 @@ CRUD scaffolding engine for CodeIgniter 4 APIs built on [`dcardenasl/ci4-api-cor
 ## Installation
 
 ```bash
-composer require --dev dcardenasl/ci4-api-scaffolding:^0.5
+composer require --dev dcardenasl/ci4-api-scaffolding:^0.6
 ```
 
 ## Quick Start
@@ -280,6 +281,8 @@ Full example:
 'title:string:required|searchable,price:decimal:required|filterable,author_id:fk:users:required|restrict'
 ```
 
+**Boolean validation contract** — `bool` currently maps to `boolean_like`, which is part of the supported starter contract (`ci4-api-starter` and `ci4-domain-starter` both ship and register that custom rule). If a non-starter consumer uses this package, it must expose an equivalent `boolean_like` validation rule or adapt the generated rule set after scaffolding.
+
 ## Generated Artifacts
 
 `make:crud Article Blog 'title:string:required' yes` creates 17 files:
@@ -305,6 +308,28 @@ tests/Feature/Controllers/Blog/ArticleControllerTest.php
 ```
 
 `Services.php` is also updated (or a snippet is printed with `--no-wire`) to register the new service and response mapper.
+
+## Scaffolding Boundaries
+
+`make:crud` is designed for **flat CRUD resources**. It gives you a correct starting module for entities that behave like:
+- one primary table
+- standard list/show/create/update/delete
+- scalar fields and conventional foreign keys
+- standard DTO/model/controller/service wiring
+
+It is **not** a full aggregate generator. If your resource needs any of the following, expect manual extension after scaffolding:
+- custom workflow actions such as `publish`, `archive`, `approve`
+- nested sub-resources such as `/items/{id}/media`
+- relation arrays in payloads such as `tag_ids[]` or embedded `media[]`
+- pivot tables with composite primary keys and no synthetic `id`
+- cross-field invariants such as "if `is_for_sale=true`, then `price` and `currency` are required"
+- response enrichment that joins child collections or computed data
+
+Practical rule:
+- use `make:crud` to establish the module skeleton and conventions
+- then evolve the generated service/controller/routes into an aggregate by hand
+
+The scaffolder is successful when it removes boilerplate and preserves architectural consistency. It is not trying to replace domain modeling for complex aggregates.
 
 ## Compatibility Matrix
 

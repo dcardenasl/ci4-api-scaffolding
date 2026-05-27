@@ -10,13 +10,14 @@ use App\DTO\Request\Catalog\ProductIndexRequestDTO;
 use App\DTO\Request\Catalog\ProductUpdateRequestDTO;
 use App\Interfaces\Catalog\ProductServiceInterface;
 use CodeIgniter\HTTP\ResponseInterface;
+use dcardenasl\Ci4ApiCore\Dto\SecurityContext;
 use Config\Services;
 
 class ProductController extends ApiController
 {
     protected ProductServiceInterface $productService;
 
-    protected function resolveDefaultService(): object
+    protected function resolveDefaultService(): ProductServiceInterface
     {
         $this->productService = Services::productService();
 
@@ -40,18 +41,22 @@ class ProductController extends ApiController
     public function update(int $id): ResponseInterface
     {
         return $this->handleRequest(
-            fn ($dto, $context) => $this->productService->update($id, $dto, $context),
+            fn (ProductUpdateRequestDTO $dto, SecurityContext $context): mixed => $this->productService->update($id, $dto, $context),
             ProductUpdateRequestDTO::class
         );
     }
 
     public function show(int $id): ResponseInterface
     {
-        return $this->handleRequest(fn ($dto, $context) => $this->productService->show($id, $context));
+        return $this->handleRequest(
+            fn (array $dto, SecurityContext $context): mixed => $this->productService->show($id, $context)
+        );
     }
 
     public function delete(int $id): ResponseInterface
     {
-        return $this->handleRequest(fn ($dto, $context) => $this->productService->destroy($id, $context));
+        return $this->handleRequest(
+            fn (array $dto, SecurityContext $context): mixed => $this->productService->destroy($id, $context)
+        );
     }
 }

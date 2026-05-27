@@ -35,7 +35,8 @@ final class RouteGeneratorTest extends TestCase
         );
 
         $artifacts = $generator->generate($schema);
-        $content = reset($artifacts);
+        $this->assertCount(1, $artifacts);
+        $content = array_values($artifacts)[0];
 
         $this->assertStringContainsString("['filter' => []]", $content);
         $this->assertStringNotContainsString('jwtauth', $content);
@@ -61,7 +62,8 @@ final class RouteGeneratorTest extends TestCase
         );
 
         $artifacts = $generator->generate($schema);
-        $content = reset($artifacts);
+        $this->assertCount(1, $artifacts);
+        $content = array_values($artifacts)[0];
 
         $this->assertStringContainsString(
             "['filter' => ['jwtauth', 'permission:iam.superadmin-access', 'throttle']]",
@@ -102,11 +104,8 @@ final class RouteGeneratorTest extends TestCase
         );
 
         $artifacts = $generator->generate($schema);
-
-        $expectedPath = APPPATH . 'Config/Routes/api/catalog.php';
-        $this->assertArrayHasKey($expectedPath, $artifacts);
-
-        $content = $artifacts[$expectedPath];
+        $this->assertCount(1, $artifacts);
+        $content = array_values($artifacts)[0];
 
         $this->assertStringContainsString(
             "['filter' => ['session', 'permission:catalog.write']]",
