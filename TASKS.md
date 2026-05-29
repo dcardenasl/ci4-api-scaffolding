@@ -20,6 +20,11 @@
 
 ## ✅ Completadas
 
+### SCAF-006 — Robustez en inyección de rutas (F7 / Post-Audit FAQ)
+- **Qué**: `RouteGenerator::injectRoute` ahora usa Regex en lugar de `str_contains` para encontrar el punto de inserción dentro del grupo protegido. El patrón soporta firmas de cierre con `: void` (añadidas por PHP CS Fixer) y es flexible con los espacios.
+- **Por qué**: F7 del audit de coherencia y hallazgo clave en el audit de FAQ. Evita que el scaffolding rompa o inyecte fuera del grupo si el archivo fue formateado previamente.
+- **Verificado**: Implementado y verificado manualmente con mock de contenido formateado.
+
 ### SCAF-005 — Alineación de dependencias (audit de coherencia, Tier 2)
 - **Qué**: `dcardenasl/ci4-api-core` `^0.8.0` → `^0.9.0` (cascada F4); `phpunit/phpunit` `^10.5` → `^11.0` (F2); `phpstan/phpstan` `^2.0` → `^2.1` (F1); `composer.lock` CI4 `v4.7.2` → `v4.7.3` (F3); schema de `phpunit.xml.dist` a 11.5; branch-alias `0.7.x-dev`.
 - **Por qué**: audit de coherencia (2026-05-28). El pin `^0.8.0` excluía core 0.9.0, lo que habría bloqueado a los consumers que adoptan core 0.9 — el bump es obligatorio para la cascada.
