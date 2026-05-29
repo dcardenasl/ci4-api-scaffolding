@@ -14,7 +14,7 @@ use OpenApi\Attributes as OA;
 class {resource}Endpoints
 {
     #[OA\Get(
-        path: '/api/v1/{domainKebab}/{route}',
+        path: '/api/{apiVersion}/{domainKebab}/{route}',
         tags: ['{domain}'],
         summary: 'List {plural}',
         responses: [
@@ -38,7 +38,7 @@ class {resource}Endpoints
     public function index() {}
 
     #[OA\Post(
-        path: '/api/v1/{domainKebab}/{route}',
+        path: '/api/{apiVersion}/{domainKebab}/{route}',
         tags: ['{domain}'],
         summary: 'Create new {resource}',
         requestBody: new OA\RequestBody(
@@ -53,7 +53,7 @@ class {resource}Endpoints
     public function store() {}
 
     #[OA\Get(
-        path: '/api/v1/{domainKebab}/{route}/{id}',
+        path: '/api/{apiVersion}/{domainKebab}/{route}/{id}',
         tags: ['{domain}'],
         summary: 'Get {resource} by ID',
         parameters: [
@@ -71,7 +71,7 @@ class {resource}Endpoints
     public function show() {}
 
     #[OA\Put(
-        path: '/api/v1/{domainKebab}/{route}/{id}',
+        path: '/api/{apiVersion}/{domainKebab}/{route}/{id}',
         tags: ['{domain}'],
         summary: 'Update existing {resource}',
         parameters: [
@@ -94,7 +94,7 @@ class {resource}Endpoints
     public function update() {}
 
     #[OA\Delete(
-        path: '/api/v1/{domainKebab}/{route}/{id}',
+        path: '/api/{apiVersion}/{domainKebab}/{route}/{id}',
         tags: ['{domain}'],
         summary: 'Delete {resource} by ID',
         parameters: [

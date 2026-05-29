@@ -30,18 +30,39 @@ class {resource}Controller extends {controllerBaseShort}
 
     public function index(): ResponseInterface
     {
-        return $this->handleRequest('index', {resource}IndexRequestDTO::class);
+        return $this->handleRequest(
+            function ({resource}IndexRequestDTO $dto, SecurityContext $context): mixed {
+                if (!$context->hasPermission('{resourceLower}.read')) {
+                    throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
+                }
+                return $this->{resourceLower}Service->index($dto, $context);
+            },
+            {resource}IndexRequestDTO::class
+        );
     }
 
     public function create(): ResponseInterface
     {
-        return $this->handleRequest('store', {resource}CreateRequestDTO::class);
+        return $this->handleRequest(
+            function ({resource}CreateRequestDTO $dto, SecurityContext $context): mixed {
+                if (!$context->hasPermission('{resourceLower}.write')) {
+                    throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
+                }
+                return $this->{resourceLower}Service->store($dto, $context);
+            },
+            {resource}CreateRequestDTO::class
+        );
     }
 
     public function update(int $id): ResponseInterface
     {
         return $this->handleRequest(
-            fn ({resource}UpdateRequestDTO $dto, SecurityContext $context): mixed => $this->{resourceLower}Service->update($id, $dto, $context),
+            function ({resource}UpdateRequestDTO $dto, SecurityContext $context) use ($id): mixed {
+                if (!$context->hasPermission('{resourceLower}.write')) {
+                    throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
+                }
+                return $this->{resourceLower}Service->update($id, $dto, $context);
+            },
             {resource}UpdateRequestDTO::class
         );
     }
@@ -49,14 +70,24 @@ class {resource}Controller extends {controllerBaseShort}
     public function show(int $id): ResponseInterface
     {
         return $this->handleRequest(
-            fn (array $dto, SecurityContext $context): mixed => $this->{resourceLower}Service->show($id, $context)
+            function (array $dto, SecurityContext $context) use ($id): mixed {
+                if (!$context->hasPermission('{resourceLower}.read')) {
+                    throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
+                }
+                return $this->{resourceLower}Service->show($id, $context);
+            }
         );
     }
 
     public function delete(int $id): ResponseInterface
     {
         return $this->handleRequest(
-            fn (array $dto, SecurityContext $context): mixed => $this->{resourceLower}Service->destroy($id, $context)
+            function (array $dto, SecurityContext $context) use ($id): mixed {
+                if (!$context->hasPermission('{resourceLower}.delete')) {
+                    throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
+                }
+                return $this->{resourceLower}Service->destroy($id, $context);
+            }
         );
     }
 }

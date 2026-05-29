@@ -110,6 +110,7 @@ class ControllerGenerator implements CrudGeneratorInterface
             'route'       => $route,
             'plural'      => $plural,
             'domainKebab' => $domainKebab,
+            'apiVersion'  => $schema->apiVersion,
         ]);
     }
 }

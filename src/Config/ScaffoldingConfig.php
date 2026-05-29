@@ -79,6 +79,9 @@ final readonly class ScaffoldingConfig
         // App\Traits\ before CORE-004 lands).
         public string $filterableTraitFqcn = 'dcardenasl\\Ci4ApiCore\\Models\\Traits\\Filterable',
         public string $searchableTraitFqcn = 'dcardenasl\\Ci4ApiCore\\Models\\Traits\\Searchable',
+
+        // API version used for prefixing routes and tests (e.g., 'v1', 'v2')
+        public string $apiVersion = 'v1',
     ) {
     }
 
@@ -120,6 +123,7 @@ final readonly class ScaffoldingConfig
             paths: new ScaffoldingPaths(),
             protectedRouteFilters: $protectedRouteFilters,
             appNamespace: 'App',
+            apiVersion: 'v1'
         );
     }
 }

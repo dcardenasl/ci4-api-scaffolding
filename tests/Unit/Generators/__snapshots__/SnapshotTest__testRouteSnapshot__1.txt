@@ -6,9 +6,9 @@ $routes->group('catalog', ['namespace' => '\App\Controllers\Api\V1\Catalog'], fu
     $routes->group('', ['filter' => []], function ($routes) {
         // Resource routes will be injected here
         $routes->get('products', 'ProductController::index');
-        $routes->get('products/(:segment)', 'ProductController::show');
+        $routes->get('products/(:num)', 'ProductController::show/$1');
         $routes->post('products', 'ProductController::create');
-        $routes->put('products/(:segment)', 'ProductController::update');
-        $routes->delete('products/(:segment)', 'ProductController::delete');
+        $routes->put('products/(:num)', 'ProductController::update/$1');
+        $routes->delete('products/(:num)', 'ProductController::delete/$1');
     });
 });

@@ -74,6 +74,8 @@ class RouteGenerator implements CrudGeneratorInterface
         $resource = $schema->resource;
         $route = $schema->route;
         $controller = "{$resource}Controller";
+        $resourceLower = $schema->getResourceLower();
+        $usePermissionGroups = $this->config->protectedRouteFilters !== [];
 
         if (str_contains($content, "{$controller}::index")) {
             return $content; // Already exists
@@ -88,12 +90,14 @@ class RouteGenerator implements CrudGeneratorInterface
         $filtersList = $this->renderFilterList();
 
         $traverser = new NodeTraverser();
-        $traverser->addVisitor(new class ($filtersList, $route, $controller) extends NodeVisitorAbstract {
+        $traverser->addVisitor(new class ($filtersList, $route, $controller, $resourceLower, $usePermissionGroups) extends NodeVisitorAbstract {
             private bool $injected = false;
             public function __construct(
                 private string $filtersList,
                 private string $route,
-                private string $controller
+                private string $controller,
+                private string $resourceLower,
+                private bool $usePermissionGroups,
             ) {
             }
 
@@ -138,21 +142,91 @@ class RouteGenerator implements CrudGeneratorInterface
                     return null;
                 }
 
-                // Construct statements for each verb
-                $routes = [
-                    ['get', 'index', $this->route],
-                    ['get', 'show', $this->route . '/(:segment)'],
-                    ['post', 'create', $this->route],
-                    ['put', 'update', $this->route . '/(:segment)'],
-                    ['delete', 'delete', $this->route . '/(:segment)'],
-                ];
+                // 1. Read Group
+                $readClosure = new Closure([
+                    'params' => [new Node\Param(new Node\Expr\Variable('routes'))],
+                    'returnType' => new Node\Identifier('void'),
+                    'stmts' => [
+                        new Expression(new Node\Expr\MethodCall(new Node\Expr\Variable('routes'), 'get', [
+                            new Node\Arg(new Node\Scalar\String_($this->route)),
+                            new Node\Arg(new Node\Scalar\String_($this->controller . '::index')),
+                        ])),
+                        new Expression(new Node\Expr\MethodCall(new Node\Expr\Variable('routes'), 'get', [
+                            new Node\Arg(new Node\Scalar\String_($this->route . '/(:num)')),
+                            new Node\Arg(new Node\Scalar\String_($this->controller . '::show/$1')),
+                        ])),
+                    ]
+                ]);
+                $readGroup = new Expression(new Node\Expr\MethodCall(new Node\Expr\Variable('routes'), 'group', [
+                    new Node\Arg(new Node\Scalar\String_('')),
+                    new Node\Arg(new Node\Expr\Array_([
+                        new Node\Expr\ArrayItem(
+                            new Node\Scalar\String_("permission:{$this->resourceLower}.read"),
+                            new Node\Scalar\String_('filter')
+                        )
+                    ])),
+                    new Node\Arg($readClosure)
+                ]));
 
-                foreach ($routes as [$httpVerb, $method, $path]) {
-                    $routeStmt = new Expression(new Node\Expr\MethodCall(new Node\Expr\Variable('routes'), $httpVerb, [
-                        new Node\Arg(new Node\Scalar\String_($path)),
-                        new Node\Arg(new Node\Scalar\String_($this->controller . '::' . $method)),
-                    ]));
-                    array_push($closureNode->value->stmts, $routeStmt);
+                // 2. Write Group
+                $writeClosure = new Closure([
+                    'params' => [new Node\Param(new Node\Expr\Variable('routes'))],
+                    'returnType' => new Node\Identifier('void'),
+                    'stmts' => [
+                        new Expression(new Node\Expr\MethodCall(new Node\Expr\Variable('routes'), 'post', [
+                            new Node\Arg(new Node\Scalar\String_($this->route)),
+                            new Node\Arg(new Node\Scalar\String_($this->controller . '::create')),
+                        ])),
+                        new Expression(new Node\Expr\MethodCall(new Node\Expr\Variable('routes'), 'put', [
+                            new Node\Arg(new Node\Scalar\String_($this->route . '/(:num)')),
+                            new Node\Arg(new Node\Scalar\String_($this->controller . '::update/$1')),
+                        ])),
+                    ]
+                ]);
+                $writeGroup = new Expression(new Node\Expr\MethodCall(new Node\Expr\Variable('routes'), 'group', [
+                    new Node\Arg(new Node\Scalar\String_('')),
+                    new Node\Arg(new Node\Expr\Array_([
+                        new Node\Expr\ArrayItem(
+                            new Node\Scalar\String_("permission:{$this->resourceLower}.write"),
+                            new Node\Scalar\String_('filter')
+                        )
+                    ])),
+                    new Node\Arg($writeClosure)
+                ]));
+
+                // 3. Delete Group
+                $deleteClosure = new Closure([
+                    'params' => [new Node\Param(new Node\Expr\Variable('routes'))],
+                    'returnType' => new Node\Identifier('void'),
+                    'stmts' => [
+                        new Expression(new Node\Expr\MethodCall(new Node\Expr\Variable('routes'), 'delete', [
+                            new Node\Arg(new Node\Scalar\String_($this->route . '/(:num)')),
+                            new Node\Arg(new Node\Scalar\String_($this->controller . '::delete/$1')),
+                        ])),
+                    ]
+                ]);
+                $deleteGroup = new Expression(new Node\Expr\MethodCall(new Node\Expr\Variable('routes'), 'group', [
+                    new Node\Arg(new Node\Scalar\String_('')),
+                    new Node\Arg(new Node\Expr\Array_([
+                        new Node\Expr\ArrayItem(
+                            new Node\Scalar\String_("permission:{$this->resourceLower}.delete"),
+                            new Node\Scalar\String_('filter')
+                        )
+                    ])),
+                    new Node\Arg($deleteClosure)
+                ]));
+
+                if ($this->usePermissionGroups) {
+                    // Inject granular read / write / delete permission sub-groups
+                    array_push($closureNode->value->stmts, $readGroup, $writeGroup, $deleteGroup);
+                } else {
+                    // No permission filter configured — inject flat routes directly
+                    array_push(
+                        $closureNode->value->stmts,
+                        ...$readClosure->stmts,
+                        ...$writeClosure->stmts,
+                        ...$deleteClosure->stmts
+                    );
                 }
 
                 $this->injected = true;
