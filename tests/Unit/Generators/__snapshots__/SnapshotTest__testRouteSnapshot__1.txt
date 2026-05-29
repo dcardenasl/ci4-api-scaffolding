@@ -5,16 +5,10 @@ $routes->group('catalog', ['namespace' => '\App\Controllers\Api\V1\Catalog'], fu
     // Auth & Admin Protected Group
     $routes->group('', ['filter' => []], function ($routes) {
         // Resource routes will be injected here
-        $routes->group('', ['filter' => 'permission:product.read'], function ($routes): void {
-            $routes->get('products', 'ProductController::index');
-            $routes->get('products/(:num)', 'ProductController::show/$1');
-        });
-        $routes->group('', ['filter' => 'permission:product.write'], function ($routes): void {
-            $routes->post('products', 'ProductController::create');
-            $routes->put('products/(:num)', 'ProductController::update/$1');
-        });
-        $routes->group('', ['filter' => 'permission:product.delete'], function ($routes): void {
-            $routes->delete('products/(:num)', 'ProductController::delete/$1');
-        });
+        $routes->get('products', 'ProductController::index');
+        $routes->get('products/(:num)', 'ProductController::show/$1');
+        $routes->post('products', 'ProductController::create');
+        $routes->put('products/(:num)', 'ProductController::update/$1');
+        $routes->delete('products/(:num)', 'ProductController::delete/$1');
     });
 });

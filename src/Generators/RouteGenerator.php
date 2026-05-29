@@ -75,6 +75,7 @@ class RouteGenerator implements CrudGeneratorInterface
         $route = $schema->route;
         $controller = "{$resource}Controller";
         $resourceLower = $schema->getResourceLower();
+        $usePermissionGroups = $this->config->protectedRouteFilters !== [];
 
         if (str_contains($content, "{$controller}::index")) {
             return $content; // Already exists
@@ -89,13 +90,14 @@ class RouteGenerator implements CrudGeneratorInterface
         $filtersList = $this->renderFilterList();
 
         $traverser = new NodeTraverser();
-        $traverser->addVisitor(new class ($filtersList, $route, $controller, $resourceLower) extends NodeVisitorAbstract {
+        $traverser->addVisitor(new class ($filtersList, $route, $controller, $resourceLower, $usePermissionGroups) extends NodeVisitorAbstract {
             private bool $injected = false;
             public function __construct(
                 private string $filtersList,
                 private string $route,
                 private string $controller,
-                private string $resourceLower
+                private string $resourceLower,
+                private bool $usePermissionGroups,
             ) {
             }
 
@@ -214,8 +216,18 @@ class RouteGenerator implements CrudGeneratorInterface
                     new Node\Arg($deleteClosure)
                 ]));
 
-                // Inject groups into parent closure statements
-                array_push($closureNode->value->stmts, $readGroup, $writeGroup, $deleteGroup);
+                if ($this->usePermissionGroups) {
+                    // Inject granular read / write / delete permission sub-groups
+                    array_push($closureNode->value->stmts, $readGroup, $writeGroup, $deleteGroup);
+                } else {
+                    // No permission filter configured — inject flat routes directly
+                    array_push(
+                        $closureNode->value->stmts,
+                        ...$readClosure->stmts,
+                        ...$writeClosure->stmts,
+                        ...$deleteClosure->stmts
+                    );
+                }
 
                 $this->injected = true;
                 return null;
