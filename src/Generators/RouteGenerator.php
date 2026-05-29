@@ -80,11 +80,10 @@ class RouteGenerator implements CrudGeneratorInterface
         $filtersList = $this->renderFilterList();
 
         $traverser = new NodeTraverser();
-        $traverser->addVisitor(new class ($filtersList, $resource, $route, $controller) extends NodeVisitorAbstract {
+        $traverser->addVisitor(new class ($filtersList, $route, $controller) extends NodeVisitorAbstract {
             private bool $injected = false;
             public function __construct(
                 private string $filtersList,
-                private string $resource,
                 private string $route,
                 private string $controller
             ) {
@@ -111,8 +110,8 @@ class RouteGenerator implements CrudGeneratorInterface
                 $actualFilters = $printer->prettyPrintExpr($filtersNode->value);
 
                 // Remove all whitespace for a loose comparison
-                $normalizedActual = preg_replace('/\s+/', '', $actualFilters);
-                $normalizedExpected = preg_replace('/\s+/', '', $this->filtersList);
+                $normalizedActual = (string) preg_replace('/\s+/', '', $actualFilters);
+                $normalizedExpected = (string) preg_replace('/\s+/', '', $this->filtersList);
 
                 if (str_contains($normalizedActual, "['filter'=>[]]")) {
                     $normalizedActual = str_replace("['filter'=>[]]", "[]", $normalizedActual);

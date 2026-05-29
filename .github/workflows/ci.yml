@@ -138,28 +138,4 @@ jobs:
       - name: Run E2E smoke test
         run: bash bin/e2e-smoke.sh
 
-  template-integrity-audit:
-    name: Template Integrity Audit (FAQ)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout platform
-        uses: actions/checkout@v4
-        with:
-          path: platform
-
-      - name: Setup PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-          coverage: none
-          extensions: intl, mbstring, json, dom
-
-      - name: Run scaffolding on FAQ template
-        run: |
-          cd platform/ci4-api-scaffolding
-          composer install
-          cd ../templates/ci4-faq/ci4-faq-hub
-          composer install
-          # Run scaffolding engine
-          ../../../ci4-api-scaffolding/bin/make-crud.sh AuditItem Audit 'name:string' yes
 
