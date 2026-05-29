@@ -6,6 +6,16 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.7.1] — 2026-05-29
+
+### Added
+
+- **CI Pipeline:** Integrated automated scaffolding validation (CRUD generation → unit/feature tests → PHPStan L8 → CS-Fixer).
+
+### Fixed
+
+- **Route Injection:** Replaced string-based route injection in `RouteGenerator` with `nikic/php-parser` AST parsing to ensure robustness against PHP CS Fixer formatting (specifically trailing `: void` in route closures).
+
 ## [0.7.0] — 2026-05-28
 
 ### Changed

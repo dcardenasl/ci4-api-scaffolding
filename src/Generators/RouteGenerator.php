@@ -6,22 +6,19 @@ namespace dcardenasl\Ci4ApiScaffolding\Generators;
 
 use dcardenasl\Ci4ApiScaffolding\Config\ScaffoldingConfig;
 use dcardenasl\Ci4ApiScaffolding\Core\ResourceSchema;
+use PhpParser\Node;
+use PhpParser\Node\Expr\Closure;
+use PhpParser\Node\Expr\MethodCall;
+use PhpParser\Node\Stmt\Expression;
+use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitorAbstract;
+use PhpParser\ParserFactory;
+use PhpParser\PrettyPrinter;
 
 /**
  * RouteGenerator
  * Generates or updates the domain-specific route file at the path
  * configured in ScaffoldingPaths::$routes.
- *
- * The "protected" group's filter list is taken from
- * ScaffoldingConfig::$protectedRouteFilters — no longer hardcoded to a
- * specific permission. Consumers can ship their own filter convention
- * via App\Config\Scaffolding. When the list is empty, the template emits
- * ['filter' => []] which CI4 treats as no-op (no FilterNotFoundException).
- *
- * Additionally, patchMainRoutesLoader() injects a versioned glob loader
- * into app/Config/Routes.php on first scaffold so domain route files are
- * automatically discovered. Idempotent via markers; safe to call on every
- * make:crud invocation.
  */
 class RouteGenerator implements CrudGeneratorInterface
 {
@@ -44,10 +41,18 @@ class RouteGenerator implements CrudGeneratorInterface
         $routesDir = (string) preg_replace('/v\d+$/', $schema->apiVersion, $this->config->paths->routes);
         $path = APPPATH . $routesDir . "/{$domainKebab}.php";
 
-        $content = file_exists($path) ? (string) file_get_contents($path) : $this->baseTemplate($schema);
+        $fileExists = file_exists($path);
+        $content = $fileExists ? (string) file_get_contents($path) : $this->baseTemplate($schema);
+        $injectedContent = $this->injectRoute($schema, $content);
+
+        // Validate only when updating an existing file (not for new template-based generation)
+        $controller = "{$schema->resource}Controller";
+        if ($fileExists && str_contains($injectedContent, "{$controller}::index")) {
+            $this->assertAllRoutesPresent($injectedContent, $controller);
+        }
 
         return [
-            $path => $this->injectRoute($schema, $content),
+            $path => $injectedContent,
         ];
     }
 
@@ -70,31 +75,94 @@ class RouteGenerator implements CrudGeneratorInterface
         $route = $schema->route;
         $controller = "{$resource}Controller";
 
-        $routeBlock = $this->renderer->render('route/RouteBlock', [
-            'resource'   => $resource,
-            'route'      => $route,
-            'controller' => $controller,
-        ]);
-
         if (str_contains($content, "{$controller}::index")) {
             return $content; // Already exists
         }
 
-        // Try to inject inside the protected group
-        $filtersList = $this->renderFilterList();
-        $search = "['filter' => {$filtersList}], function (\$routes) {";
-        $injected = null;
-        if (str_contains($content, $search)) {
-            $pos      = strpos($content, $search) + strlen($search);
-            $injected = substr($content, 0, $pos) . "\n" . $routeBlock . substr($content, $pos);
-        } else {
-            // Fallback: append to end
-            $injected = $content . "\n" . $routeBlock;
+        $parser = (new ParserFactory())->createForNewestSupportedVersion();
+        $ast = $parser->parse($content);
+        if ($ast === null) {
+            return $content; // Fallback or handle error
         }
 
-        $this->assertAllRoutesPresent($injected, $controller);
+        $filtersList = $this->renderFilterList();
 
-        return $injected;
+        $traverser = new NodeTraverser();
+        $traverser->addVisitor(new class ($filtersList, $route, $controller) extends NodeVisitorAbstract {
+            private bool $injected = false;
+            public function __construct(
+                private string $filtersList,
+                private string $route,
+                private string $controller
+            ) {
+            }
+
+            public function enterNode(Node $node)
+            {
+                if ($this->injected || !($node instanceof MethodCall)) {
+                    return null;
+                }
+
+                // Check if method is 'group'
+                if (!($node->name instanceof Node\Identifier && $node->name->toString() === 'group')) {
+                    return null;
+                }
+
+                // Check if this is the correct group (filter match)
+                $filtersNode = $node->args[1] ?? null;
+                if (!($filtersNode instanceof Node\Arg && $filtersNode->value instanceof Node\Expr\Array_)) {
+                    return null;
+                }
+
+                $printer = new PrettyPrinter\Standard();
+                $actualFilters = $printer->prettyPrintExpr($filtersNode->value);
+
+                // Remove all whitespace for a loose comparison
+                $normalizedActual = (string) preg_replace('/\s+/', '', $actualFilters);
+                $normalizedExpected = (string) preg_replace('/\s+/', '', $this->filtersList);
+
+                if (str_contains($normalizedActual, "['filter'=>[]]")) {
+                    $normalizedActual = str_replace("['filter'=>[]]", "[]", $normalizedActual);
+                }
+                if (str_contains($normalizedActual, "[[]]")) {
+                    $normalizedActual = str_replace("[[]]", "[]", $normalizedActual);
+                }
+
+                if ($normalizedActual !== $normalizedExpected) {
+                    return null;
+                }
+
+                // Find the closure
+                $closureNode = $node->args[2] ?? null;
+                if (!($closureNode instanceof Node\Arg && $closureNode->value instanceof Closure)) {
+                    return null;
+                }
+
+                // Construct statements for each verb
+                $routes = [
+                    ['get', 'index', $this->route],
+                    ['get', 'show', $this->route . '/(:segment)'],
+                    ['post', 'create', $this->route],
+                    ['put', 'update', $this->route . '/(:segment)'],
+                    ['delete', 'delete', $this->route . '/(:segment)'],
+                ];
+
+                foreach ($routes as [$httpVerb, $method, $path]) {
+                    $routeStmt = new Expression(new Node\Expr\MethodCall(new Node\Expr\Variable('routes'), $httpVerb, [
+                        new Node\Arg(new Node\Scalar\String_($path)),
+                        new Node\Arg(new Node\Scalar\String_($this->controller . '::' . $method)),
+                    ]));
+                    array_push($closureNode->value->stmts, $routeStmt);
+                }
+
+                $this->injected = true;
+                return null;
+            }
+        });
+
+        $traverser->traverse($ast);
+        $printer = new PrettyPrinter\Standard();
+        return $printer->prettyPrintFile($ast);
     }
 
     /**
