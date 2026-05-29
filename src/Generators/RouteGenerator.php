@@ -41,10 +41,18 @@ class RouteGenerator implements CrudGeneratorInterface
         $routesDir = (string) preg_replace('/v\d+$/', $schema->apiVersion, $this->config->paths->routes);
         $path = APPPATH . $routesDir . "/{$domainKebab}.php";
 
-        $content = file_exists($path) ? (string) file_get_contents($path) : $this->baseTemplate($schema);
+        $fileExists = file_exists($path);
+        $content = $fileExists ? (string) file_get_contents($path) : $this->baseTemplate($schema);
+        $injectedContent = $this->injectRoute($schema, $content);
+
+        // Validate only when updating an existing file (not for new template-based generation)
+        $controller = "{$schema->resource}Controller";
+        if ($fileExists && str_contains($injectedContent, "{$controller}::index")) {
+            $this->assertAllRoutesPresent($injectedContent, $controller);
+        }
 
         return [
-            $path => $this->injectRoute($schema, $content),
+            $path => $injectedContent,
         ];
     }
 
