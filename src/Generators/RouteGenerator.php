@@ -10,8 +10,8 @@ use PhpParser\Node;
 use PhpParser\Node\Expr\Closure;
 use PhpParser\Node\Expr\MethodCall;
 use PhpParser\Node\Stmt\Expression;
-use PhpParser\NodeVisitorAbstract;
 use PhpParser\NodeTraverser;
+use PhpParser\NodeVisitorAbstract;
 use PhpParser\ParserFactory;
 use PhpParser\PrettyPrinter;
 
@@ -80,21 +80,22 @@ class RouteGenerator implements CrudGeneratorInterface
         $filtersList = $this->renderFilterList();
 
         $traverser = new NodeTraverser();
-        $traverser->addVisitor(new class($filtersList, $resource, $route, $controller) extends NodeVisitorAbstract {
+        $traverser->addVisitor(new class ($filtersList, $resource, $route, $controller) extends NodeVisitorAbstract {
             private bool $injected = false;
             public function __construct(
                 private string $filtersList,
                 private string $resource,
                 private string $route,
                 private string $controller
-            ) {}
+            ) {
+            }
 
             public function enterNode(Node $node)
             {
                 if ($this->injected || !($node instanceof MethodCall)) {
                     return null;
                 }
-                
+
                 // Check if method is 'group'
                 if (!($node->name instanceof Node\Identifier && $node->name->toString() === 'group')) {
                     return null;
@@ -108,18 +109,18 @@ class RouteGenerator implements CrudGeneratorInterface
 
                 $printer = new PrettyPrinter\Standard();
                 $actualFilters = $printer->prettyPrintExpr($filtersNode->value);
-                
+
                 // Remove all whitespace for a loose comparison
                 $normalizedActual = preg_replace('/\s+/', '', $actualFilters);
                 $normalizedExpected = preg_replace('/\s+/', '', $this->filtersList);
-                
+
                 if (str_contains($normalizedActual, "['filter'=>[]]")) {
                     $normalizedActual = str_replace("['filter'=>[]]", "[]", $normalizedActual);
                 }
                 if (str_contains($normalizedActual, "[[]]")) {
                     $normalizedActual = str_replace("[[]]", "[]", $normalizedActual);
                 }
-                
+
                 if ($normalizedActual !== $normalizedExpected) {
                     return null;
                 }
@@ -138,7 +139,7 @@ class RouteGenerator implements CrudGeneratorInterface
                     ['put', 'update', $this->route . '/(:segment)'],
                     ['delete', 'delete', $this->route . '/(:segment)'],
                 ];
-                
+
                 foreach ($routes as [$httpVerb, $method, $path]) {
                     $routeStmt = new Expression(new Node\Expr\MethodCall(new Node\Expr\Variable('routes'), $httpVerb, [
                         new Node\Arg(new Node\Scalar\String_($path)),
@@ -146,7 +147,7 @@ class RouteGenerator implements CrudGeneratorInterface
                     ]));
                     array_push($closureNode->value->stmts, $routeStmt);
                 }
-                
+
                 $this->injected = true;
                 return null;
             }

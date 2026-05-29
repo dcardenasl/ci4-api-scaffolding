@@ -39,10 +39,10 @@ PHP;
 
         $this->assertStringContainsString('$routes->get(\'products\'', $result);
         $this->assertStringContainsString('// Existing routes', $result);
-        
+
         // Check if it injected INSIDE the group (between the braces)
         $this->assertStringContainsString('function ($routes): void {', $result);
         $this->assertStringContainsString('$routes->get(\'products\', \'ProductController::index\');', $result);
         $this->assertStringContainsString('});', $result);
-        }
-        }
+    }
+}
