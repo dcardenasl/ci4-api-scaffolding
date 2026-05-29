@@ -6,6 +6,14 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-05-28
+
+### Changed
+
+- **`dcardenasl/ci4-api-core` requirement bumped to `^0.9.0`** — aligns with the core 0.9.0 release (shared `HubClient`) and keeps consumers that adopt core 0.9 resolvable alongside this package.
+- **Dev tooling aligned with the platform:** `phpunit/phpunit` `^10.5` → `^11.0` and `phpstan/phpstan` `^2.0` → `^2.1`; test config schema bumped to 11.5.
+- **CodeIgniter 4 updated to v4.7.3** (`composer.lock`).
+
 ## [0.6.0] — 2026-05-27
 
 ### Added
