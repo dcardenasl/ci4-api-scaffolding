@@ -30,18 +30,39 @@ class ProductController extends ApiController
 
     public function index(): ResponseInterface
     {
-        return $this->handleRequest('index', ProductIndexRequestDTO::class);
+        return $this->handleRequest(
+            function (ProductIndexRequestDTO $dto, SecurityContext $context): mixed {
+                if (!$context->hasPermission('product.read')) {
+                    throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
+                }
+                return $this->productService->index($dto, $context);
+            },
+            ProductIndexRequestDTO::class
+        );
     }
 
     public function create(): ResponseInterface
     {
-        return $this->handleRequest('store', ProductCreateRequestDTO::class);
+        return $this->handleRequest(
+            function (ProductCreateRequestDTO $dto, SecurityContext $context): mixed {
+                if (!$context->hasPermission('product.write')) {
+                    throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
+                }
+                return $this->productService->store($dto, $context);
+            },
+            ProductCreateRequestDTO::class
+        );
     }
 
     public function update(int $id): ResponseInterface
     {
         return $this->handleRequest(
-            fn (ProductUpdateRequestDTO $dto, SecurityContext $context): mixed => $this->productService->update($id, $dto, $context),
+            function (ProductUpdateRequestDTO $dto, SecurityContext $context) use ($id): mixed {
+                if (!$context->hasPermission('product.write')) {
+                    throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
+                }
+                return $this->productService->update($id, $dto, $context);
+            },
             ProductUpdateRequestDTO::class
         );
     }
@@ -49,14 +70,24 @@ class ProductController extends ApiController
     public function show(int $id): ResponseInterface
     {
         return $this->handleRequest(
-            fn (array $dto, SecurityContext $context): mixed => $this->productService->show($id, $context)
+            function (array $dto, SecurityContext $context) use ($id): mixed {
+                if (!$context->hasPermission('product.read')) {
+                    throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
+                }
+                return $this->productService->show($id, $context);
+            }
         );
     }
 
     public function delete(int $id): ResponseInterface
     {
         return $this->handleRequest(
-            fn (array $dto, SecurityContext $context): mixed => $this->productService->destroy($id, $context)
+            function (array $dto, SecurityContext $context) use ($id): mixed {
+                if (!$context->hasPermission('product.delete')) {
+                    throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
+                }
+                return $this->productService->destroy($id, $context);
+            }
         );
     }
 }

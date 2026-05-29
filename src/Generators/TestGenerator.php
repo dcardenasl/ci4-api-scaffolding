@@ -81,9 +81,9 @@ class TestGenerator implements CrudGeneratorInterface
     private function featureTestTemplate(ResourceSchema $schema): string
     {
         $resource = $schema->resource;
-        // Routes are nested under the kebab-cased domain: /api/v1/{domain-kebab}/{route}.
+        // Routes are nested under the kebab-cased domain: /api/{apiVersion}/{domain-kebab}/{route}.
         // See RouteGenerator::baseTemplate().
-        $fullPath = '/api/v1/' . StringHelper::toKebab($schema->domain) . '/' . $schema->route;
+        $fullPath = '/api/' . $schema->apiVersion . '/' . StringHelper::toKebab($schema->domain) . '/' . $schema->route;
 
         // Determine whether any auth filter gates the route group.
         // When gated: unauthenticated requests return 401 for all endpoints.

@@ -61,8 +61,8 @@ final class ControllerGeneratorTest extends TestCase
         $this->assertNotEmpty($controllerContent);
         $this->assertStringContainsString('protected function resolveDefaultService(): ProductServiceInterface', $controllerContent);
         $this->assertStringContainsString('use dcardenasl\\Ci4ApiCore\\Dto\\SecurityContext;', $controllerContent);
-        $this->assertStringContainsString('fn (ProductUpdateRequestDTO $dto, SecurityContext $context): mixed =>', $controllerContent);
-        $this->assertStringContainsString('fn (array $dto, SecurityContext $context): mixed =>', $controllerContent);
+        $this->assertStringContainsString('hasPermission(\'product.write\')', $controllerContent);
+        $this->assertStringContainsString('hasPermission(\'product.read\')', $controllerContent);
         $this->assertStringNotContainsString('use HasSlugActions;', $controllerContent);
     }
 
@@ -92,7 +92,7 @@ final class ControllerGeneratorTest extends TestCase
         $this->assertStringContainsString('use App\\Traits\\Controllers\\HasSlugActions;', $controllerContent);
         $this->assertStringContainsString('use HasSlugActions;', $controllerContent);
         $this->assertStringContainsString('protected function resolveDefaultService(): ArticleServiceInterface', $controllerContent);
-        $this->assertStringContainsString('fn (ArticleUpdateRequestDTO $dto, SecurityContext $context): mixed =>', $controllerContent);
+        $this->assertStringContainsString('hasPermission(\'article.write\')', $controllerContent);
     }
 
     public function testConditionalTraitNotInjectedWhenFieldAbsent(): void

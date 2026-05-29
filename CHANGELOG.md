@@ -6,6 +6,15 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+### Added
+
+- **`ScaffoldingConfig::$apiVersion`** — configurable API version string (default `v1`) used when generating route paths and test URLs; enables multi-version scaffolding without manual edits.
+
+### Changed
+
+- **`RouteGenerator`** — passes `resourceLower` into the AST route-injection visitor; route statement construction refactored for correctness and readability.
+- Updated `Controller.php.tpl` and `Endpoints.php.tpl` to reflect route generation improvements; snapshots updated.
+
 ## [0.7.1] — 2026-05-29
 
 ### Added
