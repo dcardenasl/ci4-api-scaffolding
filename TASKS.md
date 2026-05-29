@@ -20,6 +20,11 @@
 
 ## ✅ Completadas
 
+### SCAF-005 — Alineación de dependencias (audit de coherencia, Tier 2)
+- **Qué**: `dcardenasl/ci4-api-core` `^0.8.0` → `^0.9.0` (cascada F4); `phpunit/phpunit` `^10.5` → `^11.0` (F2); `phpstan/phpstan` `^2.0` → `^2.1` (F1); `composer.lock` CI4 `v4.7.2` → `v4.7.3` (F3); schema de `phpunit.xml.dist` a 11.5; branch-alias `0.7.x-dev`.
+- **Por qué**: audit de coherencia (2026-05-28). El pin `^0.8.0` excluía core 0.9.0, lo que habría bloqueado a los consumers que adoptan core 0.9 — el bump es obligatorio para la cascada.
+- **Verificado**: `composer quality` limpio — PHPStan L8, CS-Fixer, security, 114 tests / 481 assertions (Unit + E2E), 0 deprecations (PHPUnit 11.5). **Released v0.7.0**.
+
 ### SCAF-004 — Plantillas del motor con tipos explícitos (2026-05-26)
 - **Qué**: `DtoGenerator` ahora emite docblocks `@return array<string, string>` / `@param array<string, mixed>` en todos los request DTOs y `ResponseDTO`. El `Controller` generado también tipa explícitamente las closures de `handleRequest()` con `SecurityContext` y `mixed`, y `UpdateRequestDTO` usa una closure `static fn (mixed $value): bool` para su `array_filter()`.
 - **Por qué**: cerrar la deuda de contrato del scaffold para que el código generado sea más legible para humanos y más estable para análisis estático downstream.
