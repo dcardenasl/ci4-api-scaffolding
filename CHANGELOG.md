@@ -6,6 +6,8 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.7.2] — 2026-05-29
+
 ### Added
 
 - **`ScaffoldingConfig::$apiVersion`** — configurable API version string (default `v1`) used when generating route paths and test URLs; enables multi-version scaffolding without manual edits.
