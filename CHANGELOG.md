@@ -6,6 +6,13 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.7.4] — 2026-05-30
+
+### Fixed
+
+- **`ScaffoldingPaths`** — test directories now use lowercase (`tests/unit`, `tests/integration`, `tests/feature`) instead of mixed case for compatibility with case-sensitive CI runners on Linux/GitHub Actions.
+- **`TestGenerator`** — now generates `tests/unit/Architecture/ArchitectureTest.php` placeholder to prevent CI failures when `phpunit --testsuite=Architecture` is run.
+
 ## [0.7.3] — 2026-05-29
 
 ### Fixed
