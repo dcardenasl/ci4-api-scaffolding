@@ -6,6 +6,12 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.7.3] — 2026-05-29
+
+### Fixed
+
+- **`RouteGenerator`** — route matching now accepts filter-keyed arrays (`['filter' => [...]]`) as a valid existing-route form; previously, a route file whose group already carried a `filter` key would fail the normalisation check and silently skip injection.
+
 ## [0.7.2] — 2026-05-29
 
 ### Added
