@@ -132,7 +132,7 @@ class RouteGenerator implements CrudGeneratorInterface
                     $normalizedActual = str_replace("[[]]", "[]", $normalizedActual);
                 }
 
-                if ($normalizedActual !== $normalizedExpected) {
+                if ($normalizedActual !== $normalizedExpected && $normalizedActual !== "['filter'=>" . $normalizedExpected . "]") {
                     return null;
                 }
 
