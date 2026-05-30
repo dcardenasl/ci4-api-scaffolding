@@ -32,9 +32,9 @@ final readonly class ScaffoldingPaths
         public string $languageEn = 'Language/en',
         public string $languageEs = 'Language/es',
         // Under ROOTPATH:
-        public string $unitTests = 'tests/Unit/Services',
-        public string $integrationTests = 'tests/Integration/Models',
-        public string $featureTests = 'tests/Feature/Controllers',
+        public string $unitTests = 'tests/unit/Services',
+        public string $integrationTests = 'tests/integration/Models',
+        public string $featureTests = 'tests/feature/Controllers',
     ) {
     }
 }

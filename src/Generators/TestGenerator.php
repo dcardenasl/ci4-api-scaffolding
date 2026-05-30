@@ -40,11 +40,19 @@ class TestGenerator implements CrudGeneratorInterface
         $integration = $this->config->paths->integrationTests;
         $feature = $this->config->paths->featureTests;
 
-        return [
+        $tests = [
             ROOTPATH . "{$unit}/{$domain}/{$resource}ServiceTest.php" => $this->unitTestTemplate($schema),
             ROOTPATH . "{$integration}/{$resource}ModelTest.php" => $this->integrationTestTemplate($schema),
             ROOTPATH . "{$feature}/{$domain}/{$resource}ControllerTest.php" => $this->featureTestTemplate($schema),
         ];
+
+        // Add architecture test placeholder (only once, idempotent).
+        $archTest = ROOTPATH . 'tests/unit/Architecture/ArchitectureTest.php';
+        if (!isset($tests[$archTest])) {
+            $tests[$archTest] = $this->architectureTestTemplate();
+        }
+
+        return $tests;
     }
 
     private function unitTestTemplate(ResourceSchema $schema): string
@@ -116,5 +124,10 @@ class TestGenerator implements CrudGeneratorInterface
             'indexStatus'  => (string) $indexStatus,
             'showStatus'   => (string) $showStatus,
         ]);
+    }
+
+    private function architectureTestTemplate(): string
+    {
+        return $this->renderer->render('tests/ArchitectureTest', []);
     }
 }
