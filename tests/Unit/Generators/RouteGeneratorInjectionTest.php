@@ -45,4 +45,35 @@ PHP;
         $this->assertStringContainsString('$routes->get(\'products\', \'ProductController::index\');', $result);
         $this->assertStringContainsString('});', $result);
     }
+
+    public function testWildcardRouteIsReorderedToEnd(): void
+    {
+        $generator = new RouteGenerator(ScaffoldingConfig::defaults());
+        $schema = new ResourceSchema(
+            resource: 'Product',
+            domain: 'Catalog',
+            route: 'products',
+            fields: [new Field(name: 'name', type: 'string')],
+        );
+
+        $content = <<<'PHP'
+<?php
+
+$routes->group('api', ['filter' => []], function($routes): void {
+    $routes->get('custom/(:segment)', 'CustomController::show/$1');
+});
+PHP;
+
+        $method = new \ReflectionMethod(RouteGenerator::class, 'injectRoute');
+        $method->setAccessible(true);
+        $result = $method->invoke($generator, $schema, $content);
+
+        // Verify that custom/(:segment) (wildcard) is placed AFTER the newly injected products (literal) route
+        $posSegment = strpos($result, "custom/(:segment)");
+        $posProducts = strpos($result, "products");
+
+        $this->assertNotFalse($posSegment);
+        $this->assertNotFalse($posProducts);
+        $this->assertGreaterThan($posProducts, $posSegment, "Wildcard route must be placed after literal route.");
+    }
 }
