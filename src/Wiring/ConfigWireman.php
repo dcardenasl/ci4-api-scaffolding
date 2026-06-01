@@ -99,7 +99,7 @@ class ConfigWireman
         ];
     }
 
-    private function registerPermissions(ResourceSchema $schema): void
+    protected function registerPermissions(ResourceSchema $schema): void
     {
         $permissionsFile = APPPATH . 'Config/DomainPermissions.php';
         if (!file_exists($permissionsFile)) {
