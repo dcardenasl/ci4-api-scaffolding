@@ -95,6 +95,9 @@ class ModuleCheck extends BaseCommand
         $enPath = APPPATH . "{$p->languageEn}/{$resourcePlural}.php";
         $esPath = APPPATH . "{$p->languageEs}/{$resourcePlural}.php";
         $parity = (new LanguageGenerator($config))->checkParity($enPath, $esPath);
+        foreach ($parity['parse_errors'] as $error) {
+            $missing[] = $error;
+        }
         foreach ($parity['missing_in_es'] as $key) {
             $missing[] = "Language key '{$key}' present in en but missing in es ({$resourcePlural}.php)";
         }
