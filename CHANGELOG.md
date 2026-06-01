@@ -6,6 +6,12 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.7.5] — 2026-05-31
+
+### Fixed
+
+- **`RouteGenerator`** — wildcard resource routes are now appended after all explicit route definitions within a group, preventing them from swallowing named routes that appear later in the file (SCAF-010).
+
 ## [0.7.4] — 2026-05-30
 
 ### Fixed
