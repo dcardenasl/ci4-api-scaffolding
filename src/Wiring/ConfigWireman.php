@@ -26,7 +26,7 @@ use PhpParser\ParserFactory;
  */
 class ConfigWireman
 {
-    private readonly PhpAstEditor $astEditor;
+    protected readonly PhpAstEditor $astEditor;
 
     public function __construct(private readonly ScaffoldingConfig $config)
     {
