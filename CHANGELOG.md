@@ -6,6 +6,14 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+### Changed
+
+- **`ModuleCheck`** — improved validation rules and checkpoint reporting for clearer troubleshooting output.
+
+### Added
+
+- **`LanguageGenerator`** — comprehensive test coverage with snapshot tests for both English and Spanish locale generation.
+
 ## [0.7.5] — 2026-05-31
 
 ### Fixed
