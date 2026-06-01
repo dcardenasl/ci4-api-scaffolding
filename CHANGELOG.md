@@ -6,6 +6,12 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.7.6.1] — 2026-06-01
+
+### Fixed
+
+- **`ConfigWireman::$astEditor` property visibility** — changed from `private` to `protected` to allow subclasses of `ConfigWireman` to call `registerPermissions()`. Completes the v0.7.6 visibility change for the method itself.
+
 ## [0.7.6] — 2026-06-01
 
 ### Fixed
