@@ -235,6 +235,7 @@ class RouteGenerator implements CrudGeneratorInterface
         });
 
         $traverser->traverse($ast);
+        $ast = $this->reorderClosureStmts($ast);
         $printer = new PrettyPrinter\Standard();
         return $printer->prettyPrintFile($ast);
     }
@@ -354,5 +355,80 @@ class RouteGenerator implements CrudGeneratorInterface
     private function loaderMarkerEnd(string $apiVersion): string
     {
         return "// ci4-api-scaffolding: api/{$apiVersion} loader end";
+    }
+
+    /**
+     * Reorders statements inside closures/groups recursively so that any route
+     * statement containing a wildcard pattern (e.g., (:segment) or (:num)) is placed
+     * at the end of its respective block.
+     *
+     * @param Node\Stmt[] $stmts
+     * @return Node\Stmt[]
+     */
+    private function reorderClosureStmts(array $stmts): array
+    {
+        $nonWildcards = [];
+        $wildcards = [];
+
+        foreach ($stmts as $stmt) {
+            $this->recurseAndReorder($stmt);
+
+            if ($this->isWildcardRoute($stmt)) {
+                $wildcards[] = $stmt;
+            } else {
+                $nonWildcards[] = $stmt;
+            }
+        }
+
+        return array_merge($nonWildcards, $wildcards);
+    }
+
+    private function recurseAndReorder(Node\Stmt $stmt): void
+    {
+        if (!($stmt instanceof Expression)) {
+            return;
+        }
+        $expr = $stmt->expr;
+        if (!($expr instanceof MethodCall)) {
+            return;
+        }
+        if ($expr->name instanceof Node\Identifier && $expr->name->toString() === 'group') {
+            foreach ($expr->args as $arg) {
+                if ($arg instanceof Node\Arg && $arg->value instanceof Closure) {
+                    $arg->value->stmts = $this->reorderClosureStmts($arg->value->stmts);
+                }
+            }
+        }
+    }
+
+    private function isWildcardRoute(Node\Stmt $stmt): bool
+    {
+        if (!($stmt instanceof Expression)) {
+            return false;
+        }
+        $expr = $stmt->expr;
+        if (!($expr instanceof MethodCall)) {
+            return false;
+        }
+        if (!($expr->name instanceof Node\Identifier)) {
+            return false;
+        }
+        $method = $expr->name->toString();
+        $verbs = ['get', 'post', 'put', 'delete', 'options', 'patch', 'head', 'match', 'add', 'cli'];
+        if (!in_array($method, $verbs, true)) {
+            return false;
+        }
+        if (empty($expr->args)) {
+            return false;
+        }
+        $firstArg = $expr->args[0];
+        if (!($firstArg instanceof Node\Arg)) {
+            return false;
+        }
+        $val = $firstArg->value;
+        if ($val instanceof Node\Scalar\String_) {
+            return str_contains($val->value, '(:');
+        }
+        return false;
     }
 }
