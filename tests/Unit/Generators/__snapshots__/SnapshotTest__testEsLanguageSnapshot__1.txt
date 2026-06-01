@@ -7,7 +7,13 @@ return [
     'not_found'      => 'Product no encontrado(a).',
     'fields'         => [
         'name' => 'Name',
+        'name_placeholder' => 'Ingresa Name',
+        'name_help' => 'Ingresa Name.',
         'price' => 'Price',
-        'in_stock' => 'In stock',
+        'price_placeholder' => 'Ingresa Price',
+        'price_help' => 'Ingresa Price.',
+        'in_stock' => 'In Stock',
+        'in_stock_placeholder' => 'Activa o desactiva In Stock',
+        'in_stock_help' => 'Activa o desactiva In Stock.',
     ],
 ];
