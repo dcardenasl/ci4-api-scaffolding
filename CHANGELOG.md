@@ -6,6 +6,12 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.7.6.2] — 2026-06-01
+
+### Fixed
+
+- **`ConfigWireman::registerPermissions()`** — fixed incorrect resource name and description pluralization. The `resource` field now correctly uses `$schema->route` (plural) instead of `$schema->getResourceLower()` (singular), and permission descriptions now properly pluralize the resource name (e.g., "Read Products" not "Read Product").
+
 ## [0.7.6.1] — 2026-06-01
 
 ### Fixed

@@ -114,9 +114,9 @@ class ConfigWireman
         }
 
         $newPermissions = [
-            ['code' => "{$resource}.read", 'resource' => "{$resource}", 'action' => 'read', 'description' => "Read " . $schema->resource],
-            ['code' => "{$resource}.write", 'resource' => "{$resource}", 'action' => 'write', 'description' => "Create or update " . $schema->resource],
-            ['code' => "{$resource}.delete", 'resource' => "{$resource}", 'action' => 'delete', 'description' => "Delete " . $schema->resource],
+            ['code' => "{$resource}.read", 'resource' => $schema->route, 'action' => 'read', 'description' => "Read " . $schema->resource . 's'],
+            ['code' => "{$resource}.write", 'resource' => $schema->route, 'action' => 'write', 'description' => "Create or update " . $schema->resource],
+            ['code' => "{$resource}.delete", 'resource' => $schema->route, 'action' => 'delete', 'description' => "Delete " . $schema->resource],
         ];
 
         $edited = $this->astEditor->edit($content, function (array &$stmts) use ($newPermissions): bool {
