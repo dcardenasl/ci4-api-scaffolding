@@ -6,6 +6,12 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.7.6] — 2026-06-01
+
+### Fixed
+
+- **`ConfigWireman::registerPermissions()`** — changed visibility from `private` to `protected` to allow test subclasses to call it during validation. Improves testability without affecting runtime behavior.
+
 ### Changed
 
 - **`ModuleCheck`** — improved validation rules and checkpoint reporting for clearer troubleshooting output.
