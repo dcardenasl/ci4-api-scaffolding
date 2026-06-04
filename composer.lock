@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6bac4f0a8c7a07e0fcb2dcb36f7d9780",
+    "content-hash": "5688d497888e1c1809d169371360a003",
     "packages": [
         {
             "name": "codeigniter4/framework",
@@ -85,16 +85,16 @@
         },
         {
             "name": "dcardenasl/ci4-api-core",
-            "version": "v0.9.0",
+            "version": "v1.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dcardenasl/ci4-api-core.git",
-                "reference": "e48d1a2c3d2b4badee834f1364f7859b2103895a"
+                "reference": "514a948522aa2eb61640c97506011301ba5905a0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dcardenasl/ci4-api-core/zipball/e48d1a2c3d2b4badee834f1364f7859b2103895a",
-                "reference": "e48d1a2c3d2b4badee834f1364f7859b2103895a",
+                "url": "https://api.github.com/repos/dcardenasl/ci4-api-core/zipball/514a948522aa2eb61640c97506011301ba5905a0",
+                "reference": "514a948522aa2eb61640c97506011301ba5905a0",
                 "shasum": ""
             },
             "require": {
@@ -170,7 +170,7 @@
                 "issues": "https://github.com/dcardenasl/ci4-api-core/issues",
                 "source": "https://github.com/dcardenasl/ci4-api-core"
             },
-            "time": "2026-05-29T03:20:22+00:00"
+            "time": "2026-06-04T08:12:21+00:00"
         },
         {
             "name": "laminas/laminas-escaper",

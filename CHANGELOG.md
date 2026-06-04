@@ -6,6 +6,12 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [0.7.7] — 2026-06-04
+
+### Changed
+
+- **`dcardenasl/ci4-api-core` constraint** — bumped from `^0.9.0` to `^1.0` following the stable v1.0.0 release of the core package.
+
 ## [0.7.6.2] — 2026-06-01
 
 ### Fixed
