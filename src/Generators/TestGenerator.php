@@ -47,7 +47,7 @@ class TestGenerator implements CrudGeneratorInterface
         ];
 
         // Add architecture test placeholder (only once, idempotent).
-        $archTest = ROOTPATH . 'tests/unit/Architecture/ArchitectureTest.php';
+        $archTest = ROOTPATH . 'tests/Unit/Architecture/ArchitectureTest.php';
         if (!isset($tests[$archTest])) {
             $tests[$archTest] = $this->architectureTestTemplate();
         }

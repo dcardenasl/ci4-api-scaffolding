@@ -6,6 +6,10 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- **`ScaffoldingPaths` and `TestGenerator`** — reverted test directory paths to PascalCase (`tests/Unit`, `tests/Integration`, `tests/Feature`). The previous lowercase format violated PSR-4 autoload conventions on case-insensitive filesystems (macOS HFS+, Windows NTFS), causing 30+ generated test classes to be silently skipped by PHPUnit despite being present in the filesystem.
+
 ## [0.7.7] — 2026-06-04
 
 ### Changed
