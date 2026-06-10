@@ -17,6 +17,15 @@ final class TypeMapperCompatibilityTest extends TestCase
         $this->assertSame('permit_empty|boolean_like', $rules);
     }
 
+    public function testRelationFieldsShareFkValidationContract(): void
+    {
+        $rules = TypeMapper::getValidationRules(
+            new Field(name: 'category_id', type: 'relation', required: true, fkTable: 'categories')
+        );
+
+        $this->assertSame('required|is_natural_no_zero|is_not_unique[categories.id]', $rules);
+    }
+
     public function testSupportedStarterReposExposeBooleanLikeRule(): void
     {
         foreach (['ci4-api-starter', 'ci4-domain-starter'] as $repoName) {

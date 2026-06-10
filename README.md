@@ -245,13 +245,14 @@ Field type codes used in the `--fields` string. All types are recognized case-se
 | `date` | — | `string` | `DATE` | `string` (date) | `valid_date[Y-m-d]` |
 | `datetime` | — | `string` | `DATETIME` | `string` (date-time) | `valid_date` |
 | `json` | — | `array` | `JSON` | `object` | `permit_empty` |
-| `fk` | — | `int` | `INT` + FK constraint | `integer` | `is_natural_no_zero\|is_not_unique[table.id]` |
+| `fk` | `relation` | `int` | `INT` + FK constraint | `integer` | `is_natural_no_zero\|is_not_unique[table.id]` |
 
 **FK field syntax** — uses a 4-segment form because the target table name is a required third segment:
 
 ```
 author_id:fk:users:required
 category_id:fk:categories:required|filterable
+category_id:relation:categories:required|filterable
 ```
 
 ## Field Modifiers
@@ -261,6 +262,7 @@ Modifiers follow the type (or the FK table) and are separated by `|`:
 ```
 name:type:modifier1|modifier2
 name:fk:target_table:modifier1|modifier2
+name:relation:target_table:modifier1|modifier2
 ```
 
 | Modifier | Effect |
@@ -271,9 +273,9 @@ name:fk:target_table:modifier1|modifier2
 | `filterable` | Adds field to the model's `$filterableFields` whitelist |
 | `unique` | Adds `UNIQUE` index + `is_unique[table.column]` validation |
 | `index` | Adds a plain (non-unique) index |
-| `cascade` | FK only — `ON DELETE CASCADE` (default for `fk` fields) |
-| `restrict` | FK only — `ON DELETE RESTRICT` |
-| `setnull` | FK only — `ON DELETE SET NULL` |
+| `cascade` | FK/relation only — `ON DELETE CASCADE` (default for `fk` and `relation` fields) |
+| `restrict` | FK/relation only — `ON DELETE RESTRICT` |
+| `setnull` | FK/relation only — `ON DELETE SET NULL` |
 
 Full example:
 
@@ -330,6 +332,8 @@ Practical rule:
 - then evolve the generated service/controller/routes into an aggregate by hand
 
 The scaffolder is successful when it removes boilerplate and preserves architectural consistency. It is not trying to replace domain modeling for complex aggregates.
+
+CSV export/import is intentionally outside the upstream API scaffold contract. In this workspace, that admin-facing bulk workflow lives in `ci4-admin-starter`, where the generator can align the export route with the current index filters and surface import validation in the admin UI.
 
 ## Compatibility Matrix
 

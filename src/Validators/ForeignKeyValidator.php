@@ -36,7 +36,7 @@ class ForeignKeyValidator
     {
         $fkFields = array_values(array_filter(
             $schema->fields,
-            static fn (Field $f): bool => $f->type === 'fk' && $f->fkTable !== null && $f->fkTable !== ''
+            static fn (Field $f): bool => $f->fkTable !== null && $f->fkTable !== ''
         ));
 
         if (empty($fkFields)) {
@@ -77,7 +77,7 @@ class ForeignKeyValidator
 
         if (!empty($missing)) {
             $hint = "\nHint: run the migration that creates the target table first, "
-                . "or remove the 'fk:' modifier and add it in a follow-up scaffold.";
+                . "or remove the foreign-key modifier and add it in a follow-up scaffold.";
             throw new InvalidArgumentException(implode("\n", $missing) . $hint);
         }
 

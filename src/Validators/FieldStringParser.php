@@ -13,8 +13,9 @@ use dcardenasl\Ci4ApiScaffolding\Core\TypeMapper;
  * Syntax:
  *   name:type:modifier1|modifier2|modifier3
  *
- * FK type uses a 4-segment form:
+ * FK-like types (`fk` or `relation`) use a 4-segment form:
  *   name:fk:target_table:modifier1|modifier2
+ *   name:relation:target_table:modifier1|modifier2
  *
  * Multiple fields are comma-separated. The caller is responsible for shell-quoting.
  */
@@ -50,7 +51,9 @@ final class FieldStringParser
                 );
             }
 
-            if ($type === 'fk') {
+            $isForeignKeyLike = in_array($type, ['fk', 'relation'], true);
+
+            if ($isForeignKeyLike) {
                 $fkTable = $segments[2] ?? null;
                 $options = explode('|', $segments[3] ?? '');
             } else {
@@ -59,9 +62,9 @@ final class FieldStringParser
             }
 
             // FK referential actions: cascade (default), restrict, setnull.
-            // Honored only when type === 'fk'; ignored otherwise.
+            // Honored only when type is fk/relation; ignored otherwise.
             $fkOnDelete = 'CASCADE';
-            if ($type === 'fk') {
+            if ($isForeignKeyLike) {
                 if (in_array('restrict', $options, true)) {
                     $fkOnDelete = 'RESTRICT';
                 } elseif (in_array('setnull', $options, true)) {
