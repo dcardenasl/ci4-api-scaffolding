@@ -2,7 +2,7 @@
 
 > Fuente de verdad para trabajo en este repo.
 > Si una tarea impacta a consumers, referenciar también `../TASKS.md`.
-> Última actualización: 2026-05-26 (SCAF-004 completado; backlog base creado desde la auditoría del bootstrap `ci4-catalog`)
+> Última actualización: 2026-06-10 (SCAFF-003 upstream cerrado: `relation` como contrato FK-like para consumidores relation-aware)
 
 ---
 
@@ -19,6 +19,11 @@
 ---
 
 ## ✅ Completadas
+
+### SCAFF-003 — Contrato relation-aware para FKs scaffolded (2026-06-10)
+- **Qué**: `make:crud` ahora acepta `relation` como tipo FK-like (`field:relation:target_table:modifiers`) además de `fk`. El parser, prompt interactivo, `TypeMapper`, validación de tablas FK, reglas de validación y documentación comparten el mismo contrato que los FKs convencionales.
+- **Por qué**: `ci4-admin-starter` ya genera dropdowns relation-aware end-to-end en `make-module.sh`; el paquete upstream de API necesitaba reconocer ese vocabulario para que los proyectos generados puedan declarar relaciones sin caer en inputs numéricos crudos o extensiones manuales divergentes.
+- **Verificado**: `vendor/bin/phpunit --filter 'FieldStringParserTest|TypeMapperCompatibilityTest|MigrationGeneratorTest|LanguageGeneratorTest'` limpio y `composer quality` limpio (121 tests / 522 assertions; 8 deprecations existentes no bloqueantes).
 
 ### SCAF-006 — Robustez en inyección de rutas (F7 / Post-Audit FAQ)
 - **Qué**: `RouteGenerator::injectRoute` ahora usa Regex en lugar de `str_contains` para encontrar el punto de inserción dentro del grupo protegido. El patrón soporta firmas de cierre con `: void` (añadidas por PHP CS Fixer) y es flexible con los espacios.

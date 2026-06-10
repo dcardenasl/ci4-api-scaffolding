@@ -6,6 +6,10 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+### Added
+
+- **Relation field contract** — `make:crud` now recognizes `relation` as an FK-like field type alongside `fk`. Relation fields use the same 4-segment syntax (`field:relation:target_table:modifiers`), validation contract (`is_natural_no_zero|is_not_unique[target.id]`), migration FK handling, interactive prompt support, and referential action modifiers as `fk` fields. This aligns the API scaffold with the admin-starter relation-aware module scaffold that renders FK fields as selectable related resources.
+
 ## [0.7.8] — 2026-06-06
 
 ### Fixed
