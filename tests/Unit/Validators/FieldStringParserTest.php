@@ -35,7 +35,8 @@ final class FieldStringParserTest extends TestCase
     }
 
     /**
-     * Regression: the `fk:` type uses a 4-segment form — `name:fk:target_table:opts`.
+     * Regression: the foreign-key-like types use a 4-segment form —
+     * `name:fk:target_table:opts` or `name:relation:target_table:opts`.
      * The previous parser only read three segments and looked for an `fk:xxx` modifier
      * inside options, so a correctly documented input like `parent_id:fk:categories:nullable`
      * produced a field with fkTable=null and nullable=false, breaking both the migration's
@@ -50,6 +51,20 @@ final class FieldStringParserTest extends TestCase
 
         $this->assertSame('parent_id', $field->name);
         $this->assertSame('fk', $field->type);
+        $this->assertSame('categories', $field->fkTable);
+        $this->assertTrue($field->required);
+        $this->assertTrue($field->filterable);
+    }
+
+    public function testParsesRelationFieldWithTableAndModifiers(): void
+    {
+        $fields = $this->parser->parse('parent_id:relation:categories:required|filterable');
+
+        $this->assertCount(1, $fields);
+        $field = $fields[0];
+
+        $this->assertSame('parent_id', $field->name);
+        $this->assertSame('relation', $field->type);
         $this->assertSame('categories', $field->fkTable);
         $this->assertTrue($field->required);
         $this->assertTrue($field->filterable);
@@ -114,6 +129,12 @@ final class FieldStringParserTest extends TestCase
         $this->assertSame('RESTRICT', $fields[0]->fkOnDelete);
     }
 
+    public function testRelationRestrictModifierSetsRestrict(): void
+    {
+        $fields = $this->parser->parse('user_id:relation:users:required|restrict');
+        $this->assertSame('RESTRICT', $fields[0]->fkOnDelete);
+    }
+
     public function testFkSetNullModifierSetsSetNull(): void
     {
         $fields = $this->parser->parse('user_id:fk:users:nullable|setnull');
@@ -151,7 +172,7 @@ final class FieldStringParserTest extends TestCase
             $this->fail('Expected UnknownFieldTypeException.');
         } catch (UnknownFieldTypeException $e) {
             // Sanity-check that the suggested types include the expected vocabulary.
-            $expected = ['bool', 'date', 'datetime', 'decimal', 'email', 'fk', 'int', 'integer', 'json', 'string', 'text'];
+            $expected = ['bool', 'date', 'datetime', 'decimal', 'email', 'fk', 'int', 'integer', 'json', 'relation', 'string', 'text'];
             foreach ($expected as $known) {
                 $this->assertContains($known, $e->knownTypes, "Missing known type: {$known}");
             }

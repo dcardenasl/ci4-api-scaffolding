@@ -84,6 +84,12 @@ class TypeMapper
             'val' => 'is_natural_no_zero',
             'oa' => 'integer'
         ],
+        'relation' => [
+            'db' => 'INT',
+            'php' => 'int',
+            'val' => 'is_natural_no_zero',
+            'oa' => 'integer'
+        ],
         'json' => [
             'db' => 'JSON',
             'php' => 'array',

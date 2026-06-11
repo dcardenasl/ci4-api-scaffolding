@@ -262,13 +262,13 @@ class MakeCrud extends BaseCommand
                 break;
             }
 
-            $type = CLI::prompt('Field type', ['string', 'text', 'int', 'bool', 'decimal', 'email', 'date', 'datetime', 'fk', 'json'], 'string');
+            $type = CLI::prompt('Field type', ['string', 'text', 'int', 'bool', 'decimal', 'email', 'date', 'datetime', 'fk', 'relation', 'json'], 'string');
             $required = CLI::prompt('Is required?', ['y', 'n'], 'y') === 'y';
             $searchable = CLI::prompt('Is searchable?', ['y', 'n'], 'n') === 'y';
             $filterable = CLI::prompt('Is filterable?', ['y', 'n'], 'n') === 'y';
 
             $fkTable = null;
-            if ($type === 'fk') {
+            if (in_array($type, ['fk', 'relation'], true)) {
                 $fkTable = CLI::prompt('Foreign key table name');
             }
 
