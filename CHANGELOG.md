@@ -6,6 +6,8 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-06-12
+
 ### Added
 
 - **Granular permission codes** — scaffolding now generates distinct `create`, `update`, and `delete` permissions instead of a generic `write` permission. Routes are grouped by permission filter when `protectedRouteFilters` is configured, enabling fine-grained RBAC (e.g., a user can create products but not update them).
