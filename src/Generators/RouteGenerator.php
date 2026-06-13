@@ -261,8 +261,8 @@ class RouteGenerator implements CrudGeneratorInterface
                 preg_match_all("/'([^']+)'/", $this->filtersList, $expectedMatches);
                 preg_match_all("/'([^']+)'/", $actualFilters, $actualMatches);
 
-                $expected = $expectedMatches[1] ?? [];
-                $actual = $actualMatches[1] ?? [];
+                $expected = $expectedMatches[1];
+                $actual = $actualMatches[1];
 
                 $expectedBase = array_values(array_filter(
                     $expected,
