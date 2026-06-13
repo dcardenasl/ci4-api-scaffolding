@@ -103,21 +103,29 @@ class ConfigWireman
     {
         $permissionsFile = APPPATH . 'Config/DomainPermissions.php';
         if (!file_exists($permissionsFile)) {
-            return;
+            file_put_contents($permissionsFile, $this->domainPermissionsTemplate());
         }
 
         $resource = $schema->getResourceLower();
         $content = (string) file_get_contents($permissionsFile);
-
-        if (str_contains($content, "{$resource}.read")) {
-            return; // Idempotent
-        }
+        $prefix = $this->permissionCodePrefix();
 
         $newPermissions = [
-            ['code' => "{$resource}.read", 'resource' => $schema->route, 'action' => 'read', 'description' => "Read " . $schema->resource . 's'],
-            ['code' => "{$resource}.write", 'resource' => $schema->route, 'action' => 'write', 'description' => "Create or update " . $schema->resource],
-            ['code' => "{$resource}.delete", 'resource' => $schema->route, 'action' => 'delete', 'description' => "Delete " . $schema->resource],
+            ['code' => "{$prefix}{$resource}.read", 'resource' => $schema->route, 'action' => 'read', 'description' => "Read " . $schema->resource . 's'],
+            ['code' => "{$prefix}{$resource}.create", 'resource' => $schema->route, 'action' => 'create', 'description' => "Create " . $schema->resource],
+            ['code' => "{$prefix}{$resource}.update", 'resource' => $schema->route, 'action' => 'update', 'description' => "Update " . $schema->resource],
+            ['code' => "{$prefix}{$resource}.delete", 'resource' => $schema->route, 'action' => 'delete', 'description' => "Delete " . $schema->resource],
         ];
+
+        $newPermissions = array_values(array_filter(
+            $newPermissions,
+            static fn (array $permission): bool => ! str_contains($content, "'" . $permission['code'] . "'")
+                && ! str_contains($content, '"' . $permission['code'] . '"'),
+        ));
+
+        if ($newPermissions === []) {
+            return;
+        }
 
         $edited = $this->astEditor->edit($content, function (array &$stmts) use ($newPermissions): bool {
             $finder = new NodeFinder();
@@ -150,6 +158,30 @@ class ConfigWireman
         if ($edited !== null) {
             file_put_contents($permissionsFile, $edited);
         }
+    }
+
+    private function permissionCodePrefix(): string
+    {
+        $prefix = trim($this->config->permissionCodePrefix, '.');
+
+        return $prefix === '' ? '' : $prefix . '.';
+    }
+
+    private function domainPermissionsTemplate(): string
+    {
+        return <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace Config;
+
+class DomainPermissions
+{
+    public const PERMISSIONS = [
+    ];
+}
+PHP;
     }
 
     private function createDomainTrait(string $domain, string $path): void

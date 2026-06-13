@@ -71,6 +71,29 @@ final class RouteGeneratorTest extends TestCase
         );
     }
 
+    public function testProtectedRoutesUseCreateUpdateDeletePermissionGroups(): void
+    {
+        $generator = new RouteGenerator(
+            ScaffoldingConfig::defaults(
+                protectedRouteFilters: ['jwtauth', 'throttle'],
+            ),
+        );
+        $schema = new ResourceSchema(
+            resource: 'Product',
+            domain: 'Catalog',
+            route: 'products',
+            fields: [new Field(name: 'name', type: 'string')],
+        );
+
+        $content = array_values($generator->generate($schema))[0];
+
+        $this->assertStringContainsString("'permission:product.read'", $content);
+        $this->assertStringContainsString("'permission:product.create'", $content);
+        $this->assertStringContainsString("'permission:product.update'", $content);
+        $this->assertStringContainsString("'permission:product.delete'", $content);
+        $this->assertStringNotContainsString("'permission:product.write'", $content);
+    }
+
     public function testBaseTemplateHonorsCustomFiltersAndNamespace(): void
     {
         $config = new ScaffoldingConfig(

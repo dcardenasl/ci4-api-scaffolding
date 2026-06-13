@@ -153,6 +153,8 @@ class ScaffoldRemover
             }
         }
 
+        $this->stripPermissions($schema, $dryRun);
+
         return $report;
     }
 
@@ -261,5 +263,32 @@ class ScaffoldRemover
         }
 
         return $modified;
+    }
+
+    private function stripPermissions(ResourceSchema $schema, bool $dryRun): void
+    {
+        $permissionsFile = APPPATH . 'Config/DomainPermissions.php';
+        if (! file_exists($permissionsFile)) {
+            return;
+        }
+
+        $resource = $schema->getResourceLower();
+        $prefix = trim($this->config->permissionCodePrefix, '.');
+        $prefix = $prefix === '' ? '' : $prefix . '.';
+        $content = (string) file_get_contents($permissionsFile);
+        $cleaned = $content;
+
+        foreach (['read', 'create', 'update', 'delete'] as $action) {
+            $code = preg_quote($prefix . $resource . '.' . $action, '/');
+            $cleaned = (string) preg_replace(
+                '/\s*\[\s*[^\]]*[\'"]code[\'"]\s*=>\s*[\'"]' . $code . '[\'"][^\]]*\],?\n?/s',
+                '',
+                $cleaned
+            );
+        }
+
+        if ($cleaned !== $content && ! $dryRun) {
+            file_put_contents($permissionsFile, $cleaned);
+        }
     }
 }

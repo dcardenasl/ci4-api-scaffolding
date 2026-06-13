@@ -44,6 +44,7 @@ class ControllerGenerator implements CrudGeneratorInterface
     {
         $resource = $schema->resource;
         $resourceLower = $schema->getResourceLower();
+        $permissionResource = $this->permissionCodePrefix() . $resourceLower;
         $domain = $schema->domain;
 
         $ns = $this->config->namespaceFor($this->config->paths->controllers) . '\\' . $domain;
@@ -67,9 +68,17 @@ class ControllerGenerator implements CrudGeneratorInterface
             'servicesFactoryShort' => $servicesFactoryShort,
             'resource'             => $resource,
             'resourceLower'        => $resourceLower,
+            'permissionResource'    => $permissionResource,
             'traitImports'         => $traitImports,
             'traitUseBlock'        => $traitUseBlock,
         ]);
+    }
+
+    private function permissionCodePrefix(): string
+    {
+        $prefix = trim($this->config->permissionCodePrefix, '.');
+
+        return $prefix === '' ? '' : $prefix . '.';
     }
 
     /**

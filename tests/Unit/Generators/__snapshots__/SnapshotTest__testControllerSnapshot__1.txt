@@ -45,7 +45,7 @@ class ProductController extends ApiController
     {
         return $this->handleRequest(
             function (ProductCreateRequestDTO $dto, SecurityContext $context): mixed {
-                if (!$context->hasPermission('product.write')) {
+                if (!$context->hasPermission('product.create')) {
                     throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
                 }
                 return $this->productService->store($dto, $context);
@@ -58,7 +58,7 @@ class ProductController extends ApiController
     {
         return $this->handleRequest(
             function (ProductUpdateRequestDTO $dto, SecurityContext $context) use ($id): mixed {
-                if (!$context->hasPermission('product.write')) {
+                if (!$context->hasPermission('product.update')) {
                     throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
                 }
                 return $this->productService->update($id, $dto, $context);

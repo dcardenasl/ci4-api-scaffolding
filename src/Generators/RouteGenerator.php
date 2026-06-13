@@ -74,7 +74,7 @@ class RouteGenerator implements CrudGeneratorInterface
         $resource = $schema->resource;
         $route = $schema->route;
         $controller = "{$resource}Controller";
-        $resourceLower = $schema->getResourceLower();
+        $resourceLower = $this->permissionCodePrefix() . $schema->getResourceLower();
         $usePermissionGroups = $this->config->protectedRouteFilters !== [];
 
         if (str_contains($content, "{$controller}::index")) {
@@ -132,7 +132,11 @@ class RouteGenerator implements CrudGeneratorInterface
                     $normalizedActual = str_replace("[[]]", "[]", $normalizedActual);
                 }
 
-                if ($normalizedActual !== $normalizedExpected && $normalizedActual !== "['filter'=>" . $normalizedExpected . "]") {
+                if (
+                    $normalizedActual !== $normalizedExpected
+                    && $normalizedActual !== "['filter'=>" . $normalizedExpected . "]"
+                    && ! $this->filtersAreCompatible($actualFilters)
+                ) {
                     return null;
                 }
 
@@ -168,8 +172,8 @@ class RouteGenerator implements CrudGeneratorInterface
                     new Node\Arg($readClosure)
                 ]));
 
-                // 2. Write Group
-                $writeClosure = new Closure([
+                // 2. Create Group
+                $createClosure = new Closure([
                     'params' => [new Node\Param(new Node\Expr\Variable('routes'))],
                     'returnType' => new Node\Identifier('void'),
                     'stmts' => [
@@ -177,24 +181,42 @@ class RouteGenerator implements CrudGeneratorInterface
                             new Node\Arg(new Node\Scalar\String_($this->route)),
                             new Node\Arg(new Node\Scalar\String_($this->controller . '::create')),
                         ])),
+                    ]
+                ]);
+                $createGroup = new Expression(new Node\Expr\MethodCall(new Node\Expr\Variable('routes'), 'group', [
+                    new Node\Arg(new Node\Scalar\String_('')),
+                    new Node\Arg(new Node\Expr\Array_([
+                        new Node\Expr\ArrayItem(
+                            new Node\Scalar\String_("permission:{$this->resourceLower}.create"),
+                            new Node\Scalar\String_('filter')
+                        )
+                    ])),
+                    new Node\Arg($createClosure)
+                ]));
+
+                // 3. Update Group
+                $updateClosure = new Closure([
+                    'params' => [new Node\Param(new Node\Expr\Variable('routes'))],
+                    'returnType' => new Node\Identifier('void'),
+                    'stmts' => [
                         new Expression(new Node\Expr\MethodCall(new Node\Expr\Variable('routes'), 'put', [
                             new Node\Arg(new Node\Scalar\String_($this->route . '/(:num)')),
                             new Node\Arg(new Node\Scalar\String_($this->controller . '::update/$1')),
                         ])),
                     ]
                 ]);
-                $writeGroup = new Expression(new Node\Expr\MethodCall(new Node\Expr\Variable('routes'), 'group', [
+                $updateGroup = new Expression(new Node\Expr\MethodCall(new Node\Expr\Variable('routes'), 'group', [
                     new Node\Arg(new Node\Scalar\String_('')),
                     new Node\Arg(new Node\Expr\Array_([
                         new Node\Expr\ArrayItem(
-                            new Node\Scalar\String_("permission:{$this->resourceLower}.write"),
+                            new Node\Scalar\String_("permission:{$this->resourceLower}.update"),
                             new Node\Scalar\String_('filter')
                         )
                     ])),
-                    new Node\Arg($writeClosure)
+                    new Node\Arg($updateClosure)
                 ]));
 
-                // 3. Delete Group
+                // 4. Delete Group
                 $deleteClosure = new Closure([
                     'params' => [new Node\Param(new Node\Expr\Variable('routes'))],
                     'returnType' => new Node\Identifier('void'),
@@ -217,20 +239,41 @@ class RouteGenerator implements CrudGeneratorInterface
                 ]));
 
                 if ($this->usePermissionGroups) {
-                    // Inject granular read / write / delete permission sub-groups
-                    array_push($closureNode->value->stmts, $readGroup, $writeGroup, $deleteGroup);
+                    // Inject granular read / create / update / delete permission sub-groups
+                    array_push($closureNode->value->stmts, $readGroup, $createGroup, $updateGroup, $deleteGroup);
                 } else {
                     // No permission filter configured — inject flat routes directly
                     array_push(
                         $closureNode->value->stmts,
                         ...$readClosure->stmts,
-                        ...$writeClosure->stmts,
+                        ...$createClosure->stmts,
+                        ...$updateClosure->stmts,
                         ...$deleteClosure->stmts
                     );
                 }
 
                 $this->injected = true;
                 return null;
+            }
+
+            private function filtersAreCompatible(string $actualFilters): bool
+            {
+                preg_match_all("/'([^']+)'/", $this->filtersList, $expectedMatches);
+                preg_match_all("/'([^']+)'/", $actualFilters, $actualMatches);
+
+                $expected = $expectedMatches[1] ?? [];
+                $actual = $actualMatches[1] ?? [];
+
+                $expectedBase = array_values(array_filter(
+                    $expected,
+                    static fn (string $filter): bool => ! str_starts_with($filter, 'permission:')
+                ));
+                $actualBase = array_values(array_filter(
+                    $actual,
+                    static fn (string $filter): bool => ! str_starts_with($filter, 'permission:')
+                ));
+
+                return $expectedBase !== [] && $expectedBase === $actualBase;
             }
         });
 
@@ -276,6 +319,13 @@ class RouteGenerator implements CrudGeneratorInterface
     {
         $quoted = array_map(static fn (string $f): string => "'" . addslashes($f) . "'", $this->config->protectedRouteFilters);
         return '[' . implode(', ', $quoted) . ']';
+    }
+
+    private function permissionCodePrefix(): string
+    {
+        $prefix = trim($this->config->permissionCodePrefix, '.');
+
+        return $prefix === '' ? '' : $prefix . '.';
     }
 
     // ─── Routes.php glob loader ───────────────────────────────────────────────

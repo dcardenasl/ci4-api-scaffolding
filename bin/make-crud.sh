@@ -208,7 +208,17 @@ if [[ "$MIGRATE" == true ]]; then
 fi
 
 echo ""
-echo -e "${YELLOW}Step 3: Next steps${NC}"
+echo -e "${YELLOW}Step 3: Syncing permissions (best effort)...${NC}"
+if php spark list --no-color 2>/dev/null | grep -q 'iam:sync-permissions'; then
+    php spark iam:sync-permissions || echo -e "${YELLOW}⚠ iam:sync-permissions failed — run it manually after reviewing the scaffold.${NC}"
+elif php spark list --no-color 2>/dev/null | grep -q 'domain:sync-permissions'; then
+    php spark domain:sync-permissions || echo -e "${YELLOW}⚠ domain:sync-permissions failed — run it manually after reviewing the scaffold.${NC}"
+else
+    echo -e "${YELLOW}⚠ No permissions sync command found — skipping.${NC}"
+fi
+
+echo ""
+echo -e "${YELLOW}Step 4: Next steps${NC}"
 echo -e "  1. Review migration: ${BLUE}app/Database/Migrations/*_Create${RESOURCE}*Table.php${NC}"
 echo -e "  2. Run migrations:   ${BLUE}php spark migrate${NC}"
 echo "  3. Restart server to detect new route files."

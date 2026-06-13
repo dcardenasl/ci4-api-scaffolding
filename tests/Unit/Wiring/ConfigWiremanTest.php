@@ -151,6 +151,64 @@ final class ConfigWiremanTest extends TestCase
         }
     }
 
+    public function testWireCreatesDomainPermissionsWithPrefixedGranularActions(): void
+    {
+        $configDir = APPPATH . 'Config';
+        if (!is_dir($configDir)) {
+            mkdir($configDir, 0o777, true);
+        }
+
+        $servicesFile = $configDir . '/Services.php';
+        file_put_contents(
+            $servicesFile,
+            "<?php\n\nnamespace Config;\n\nuse CodeIgniter\\Config\\BaseService;\n\nclass Services extends BaseService\n{\n}\n",
+        );
+
+        $permissionsFile = $configDir . '/DomainPermissions.php';
+        @unlink($permissionsFile);
+
+        $wireman = new ConfigWireman(new ScaffoldingConfig(
+            controllerBaseClass: 'Acme\\Http\\BaseApiController',
+            serviceBaseClass: 'Acme\\Services\\Core\\AbstractCrud',
+            serviceContractInterface: 'Acme\\Services\\Core\\CrudContract',
+            modelBaseClass: 'Acme\\Models\\Base',
+            entityBaseClass: 'CodeIgniter\\Entity\\Entity',
+            migrationBaseClass: 'CodeIgniter\\Database\\Migration',
+            requestDtoBaseClass: 'Acme\\DTO\\BaseRequest',
+            responseDtoInterface: 'Acme\\DTO\\Contract',
+            repositoryInterface: 'Acme\\Persistence\\RepoContract',
+            responseMapperInterface: 'Acme\\Mappers\\MapperContract',
+            repositoryImplementation: 'Acme\\Persistence\\GenericRepo',
+            responseMapperImplementation: 'Acme\\Mappers\\DtoResponseMapper',
+            servicesFactoryClass: 'Config\\Services',
+            paths: ScaffoldingConfig::defaults()->paths,
+            protectedRouteFilters: ['acme-auth'],
+            appNamespace: 'Acme',
+            permissionCodePrefix: 'cms',
+        ));
+        $schema = new ResourceSchema(
+            resource: 'Product',
+            domain: 'Catalog',
+            route: 'products',
+            fields: [new Field(name: 'name', type: 'string')],
+        );
+
+        try {
+            $wireman->wire($schema);
+            $content = (string) file_get_contents($permissionsFile);
+
+            $this->assertStringContainsString("'code' => 'cms.product.read'", $content);
+            $this->assertStringContainsString("'code' => 'cms.product.create'", $content);
+            $this->assertStringContainsString("'code' => 'cms.product.update'", $content);
+            $this->assertStringContainsString("'code' => 'cms.product.delete'", $content);
+            $this->assertStringNotContainsString("'code' => 'cms.product.write'", $content);
+        } finally {
+            @unlink($configDir . '/CatalogDomainServices.php');
+            @unlink($permissionsFile);
+            @unlink($servicesFile);
+        }
+    }
+
     public function testWireThrowsWhenServicesFileHasNoServicesClass(): void
     {
         // A truly malformed Services.php (no `class Services extends X` declaration

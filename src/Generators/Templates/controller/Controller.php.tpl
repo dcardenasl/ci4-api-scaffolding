@@ -32,7 +32,7 @@ class {resource}Controller extends {controllerBaseShort}
     {
         return $this->handleRequest(
             function ({resource}IndexRequestDTO $dto, SecurityContext $context): mixed {
-                if (!$context->hasPermission('{resourceLower}.read')) {
+                if (!$context->hasPermission('{permissionResource}.read')) {
                     throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
                 }
                 return $this->{resourceLower}Service->index($dto, $context);
@@ -45,7 +45,7 @@ class {resource}Controller extends {controllerBaseShort}
     {
         return $this->handleRequest(
             function ({resource}CreateRequestDTO $dto, SecurityContext $context): mixed {
-                if (!$context->hasPermission('{resourceLower}.write')) {
+                if (!$context->hasPermission('{permissionResource}.create')) {
                     throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
                 }
                 return $this->{resourceLower}Service->store($dto, $context);
@@ -58,7 +58,7 @@ class {resource}Controller extends {controllerBaseShort}
     {
         return $this->handleRequest(
             function ({resource}UpdateRequestDTO $dto, SecurityContext $context) use ($id): mixed {
-                if (!$context->hasPermission('{resourceLower}.write')) {
+                if (!$context->hasPermission('{permissionResource}.update')) {
                     throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
                 }
                 return $this->{resourceLower}Service->update($id, $dto, $context);
@@ -83,7 +83,7 @@ class {resource}Controller extends {controllerBaseShort}
     {
         return $this->handleRequest(
             function (array $dto, SecurityContext $context) use ($id): mixed {
-                if (!$context->hasPermission('{resourceLower}.delete')) {
+                if (!$context->hasPermission('{permissionResource}.delete')) {
                     throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
                 }
                 return $this->{resourceLower}Service->destroy($id, $context);
