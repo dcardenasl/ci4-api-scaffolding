@@ -6,6 +6,14 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-06-12
+
+### Added
+
+- **Granular permission codes** — scaffolding now generates distinct `create`, `update`, and `delete` permissions instead of a generic `write` permission. Routes are grouped by permission filter when `protectedRouteFilters` is configured, enabling fine-grained RBAC (e.g., a user can create products but not update them).
+- **Domain permission code prefix** — `ScaffoldingConfig::$permissionCodePrefix` allows APIs to namespace permission codes by domain (e.g., `catalog.product.create` instead of `product.create`), improving clarity when multiple domains share resource names. Defaults to empty string (no prefix).
+- **Auto-create `DomainPermissions.php`** — if the permissions config class does not exist, `ConfigWireman` now creates it with an empty `PERMISSIONS` array, eliminating a manual scaffolding step in domain-oriented APIs.
+
 ## [1.0.0] — 2026-06-10
 
 ### Added

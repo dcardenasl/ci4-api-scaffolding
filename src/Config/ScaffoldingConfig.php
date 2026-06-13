@@ -82,6 +82,9 @@ final readonly class ScaffoldingConfig
 
         // API version used for prefixing routes and tests (e.g., 'v1', 'v2')
         public string $apiVersion = 'v1',
+
+        // Optional namespace prefix for generated permission codes.
+        public string $permissionCodePrefix = '',
     ) {
     }
 
