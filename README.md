@@ -9,8 +9,6 @@
 
 CRUD scaffolding engine for CodeIgniter 4 APIs built on [`dcardenasl/ci4-api-core`](https://github.com/dcardenasl/ci4-api-core). One command generates DTOs, service, controller, migration, routes, language files, and tests — all wired to the `ci4-api-core` base classes.
 
-> **Pre-1.0 policy:** MINOR bumps may contain breaking changes. Pin to `~0.x.0` or exact version until v1.0.0.
-
 ## Table of Contents
 
 - [Requirements](#requirements)
@@ -31,12 +29,12 @@ CRUD scaffolding engine for CodeIgniter 4 APIs built on [`dcardenasl/ci4-api-cor
 
 - PHP `^8.2`
 - CodeIgniter 4 `^4.7`
-- [`dcardenasl/ci4-api-core`](https://packagist.org/packages/dcardenasl/ci4-api-core) `^0.9` (installed automatically as a dependency)
+- [`dcardenasl/ci4-api-core`](https://packagist.org/packages/dcardenasl/ci4-api-core) `^1.0` (installed automatically as a dependency)
 
 ## Installation
 
 ```bash
-composer require --dev dcardenasl/ci4-api-scaffolding:^0.7
+composer require --dev dcardenasl/ci4-api-scaffolding:^1.1
 ```
 
 ## Quick Start

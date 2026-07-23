@@ -1,10 +1,10 @@
 # Changelog
 
-All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html) with the caveat that pre-1.0 releases may break.
-
-> **Pre-1.0 policy:** MINOR bumps may contain breaking changes. Pin to `~0.x.0` or exact version until v1.0.0 is tagged.
+All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.1.1] — 2026-07-23
 
 ### Fixed
 
