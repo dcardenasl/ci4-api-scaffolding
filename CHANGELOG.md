@@ -6,6 +6,10 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- **`Commands\MakeCrudRemove`** — `run()` now detects a non-interactive stdin (`posix_isatty(STDIN)`) before calling `CLI::prompt()` for delete confirmation, and fails clean with "re-run with --force" instead of crashing with `TypeError: InputOutput::input(): Return value must be of type string, bool returned`. This is the same failure class documented for `make:crud` under audit finding C13 (`docs/audits/make-crud-audit.md`) — that command's `gatherFields()` already guarded against it, but the sibling `make:crud:remove` confirmation prompt was never patched. Verified the crash does not delete any files before throwing (the prompt runs before `ScaffoldRemover::remove()`), so this was a hard failure, not silent data loss — but it made the command unusable in CI/non-TTY contexts without `--force`.
+
 ## [1.1.0] — 2026-06-12
 
 ### Added
