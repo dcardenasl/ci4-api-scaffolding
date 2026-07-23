@@ -76,6 +76,16 @@ class MakeCrudRemove extends BaseCommand
                     CLI::write("  - {$path}");
                 }
                 CLI::newLine();
+
+                // CLI::prompt() returns bool (not string) when stdin is not a TTY,
+                // causing a TypeError (same failure class as make:crud's C13).
+                // Fail clean instead of crashing mid-confirmation.
+                if (function_exists('posix_isatty') && !posix_isatty(STDIN)) {
+                    CLI::error('Confirmation prompt requires an interactive terminal. Re-run with --force to skip confirmation in non-interactive environments.');
+
+                    return EXIT_ERROR;
+                }
+
                 $confirm = CLI::prompt('Proceed? Manually edited files will be lost.', ['y', 'n']);
                 if ($confirm !== 'y') {
                     CLI::write('Aborted.', 'yellow');

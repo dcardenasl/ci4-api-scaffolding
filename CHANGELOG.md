@@ -1,10 +1,14 @@
 # Changelog
 
-All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html) with the caveat that pre-1.0 releases may break.
-
-> **Pre-1.0 policy:** MINOR bumps may contain breaking changes. Pin to `~0.x.0` or exact version until v1.0.0 is tagged.
+All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [1.1.1] — 2026-07-23
+
+### Fixed
+
+- **`Commands\MakeCrudRemove`** — `run()` now detects a non-interactive stdin (`posix_isatty(STDIN)`) before calling `CLI::prompt()` for delete confirmation, and fails clean with "re-run with --force" instead of crashing with `TypeError: InputOutput::input(): Return value must be of type string, bool returned`. This is the same failure class documented for `make:crud` under audit finding C13 (`docs/audits/make-crud-audit.md`) — that command's `gatherFields()` already guarded against it, but the sibling `make:crud:remove` confirmation prompt was never patched. Verified the crash does not delete any files before throwing (the prompt runs before `ScaffoldRemover::remove()`), so this was a hard failure, not silent data loss — but it made the command unusable in CI/non-TTY contexts without `--force`.
 
 ## [1.1.0] — 2026-06-12
 
