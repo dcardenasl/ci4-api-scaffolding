@@ -4,6 +4,12 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [1.1.2] — 2026-07-24
+
+### Security
+
+- **`symfony/yaml`** bumped v7.4.11 → v7.4.14 (transitive via `zircote/swagger-php` / `spatie/phpunit-snapshot-assertions`, dev-only) — resolves CVE-2026-45304 (exponential memory allocation via recursive collection-alias expansion), CVE-2026-45305 (ReDoS via catastrophic backtracking in `Parser::cleanup()`), and CVE-2026-45133 (stack exhaustion via unbounded recursion). No code changes required; the existing constraint already permitted the patched version.
+
 ## [1.1.1] — 2026-07-23
 
 ### Fixed
