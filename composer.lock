@@ -85,16 +85,16 @@
         },
         {
             "name": "dcardenasl/ci4-api-core",
-            "version": "v1.0.0",
+            "version": "v1.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dcardenasl/ci4-api-core.git",
-                "reference": "514a948522aa2eb61640c97506011301ba5905a0"
+                "reference": "2be461a58ab811993f6ea1798629bef967b4ce58"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dcardenasl/ci4-api-core/zipball/514a948522aa2eb61640c97506011301ba5905a0",
-                "reference": "514a948522aa2eb61640c97506011301ba5905a0",
+                "url": "https://api.github.com/repos/dcardenasl/ci4-api-core/zipball/2be461a58ab811993f6ea1798629bef967b4ce58",
+                "reference": "2be461a58ab811993f6ea1798629bef967b4ce58",
                 "shasum": ""
             },
             "require": {
@@ -170,7 +170,7 @@
                 "issues": "https://github.com/dcardenasl/ci4-api-core/issues",
                 "source": "https://github.com/dcardenasl/ci4-api-core"
             },
-            "time": "2026-06-04T08:12:21+00:00"
+            "time": "2026-07-23T22:57:33+00:00"
         },
         {
             "name": "laminas/laminas-escaper",
