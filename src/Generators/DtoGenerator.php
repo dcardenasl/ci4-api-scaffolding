@@ -80,6 +80,67 @@ class DtoGenerator implements CrudGeneratorInterface
         };
     }
 
+    /**
+     * Update-DTO-only mapping expression. Unlike buildMapExpression() (shared
+     * with Create, where every field is always present), an Update payload
+     * can legitimately omit a field to mean "don't touch it" — but it must
+     * still be possible to send the field as null to mean "clear it" when
+     * the underlying column is nullable. isset($data[x]) can't tell those
+     * apart: it reads false whether the key is absent or present-with-null.
+     * array_key_exists() is required to distinguish them; the actual
+     * "does an explicit null survive into toArray()" decision is made
+     * separately in updateRequestDto(), which is why this method alone
+     * still resolves to `null` for both cases — the resolved value is
+     * identical, only whether it gets recorded into $mappedFields differs.
+     *
+     * Nullable fields additionally treat an empty string as "no value" (an
+     * HTML form's blank text/number input), so it clears the same as null
+     * rather than writing 0/'' into the column. NOT NULL fields skip that
+     * shortcut — an empty string there is a validation concern (rules()),
+     * not a silent "leave unchanged".
+     */
+    private function buildUpdateMapExpression(Field $field): string
+    {
+        $access = "\$data['{$field->name}']";
+        $phpType = TypeMapper::get($field->type)['php'];
+        $present = "array_key_exists('{$field->name}', \$data)";
+
+        if ($phpType === 'array') {
+            return "{$present} && is_array({$access}) ? (array) {$access} : null";
+        }
+
+        if ($phpType === 'bool') {
+            return "{$present} && {$access} !== null ? (bool) {$access} : null";
+        }
+
+        $condition = "{$present} && {$access} !== null" . ($field->nullable ? " && {$access} !== ''" : '');
+        $cast = match ($phpType) {
+            'int'   => '(int)',
+            'float' => '(float)',
+            default => '(string)',
+        };
+
+        return "{$condition} ? {$cast} {$access} : null";
+    }
+
+    /**
+     * Whether a resolved Update DTO field value should be recorded into
+     * $mappedFields (and therefore reach toArray() / the eventual UPDATE
+     * payload). NOT NULL fields only record a real value — an explicit null
+     * there is indistinguishable from "not provided" and must stay that way
+     * to respect the DB constraint. Nullable fields record whenever the key
+     * was present at all, including when the resolved value is null, so an
+     * explicit clear actually reaches the database.
+     */
+    private function buildUpdateMappedFieldCondition(Field $field): string
+    {
+        if ($field->nullable) {
+            return "array_key_exists('{$field->name}', \$data)";
+        }
+
+        return "\$this->{$field->name} !== null";
+    }
+
     /** @return array<string,string> path => content */
     public function generate(ResourceSchema $schema): array
     {
@@ -164,7 +225,7 @@ class DtoGenerator implements CrudGeneratorInterface
         $properties = '';
         $rules = '';
         $mappings = '';
-        $toArray = '';
+        $mappedFieldsBlock = '';
 
         foreach ($schema->fields as $field) {
             $phpType = TypeMapper::getPhpType($field->type, true); // Update fields are usually optional
@@ -179,8 +240,12 @@ class DtoGenerator implements CrudGeneratorInterface
             $properties .= "    public {$phpType} \${$field->name};\n";
             $rules .= "            '{$field->name}' => '{$validation}',\n";
 
-            $mappings .= "        \$this->{$field->name} = " . $this->buildMapExpression($field, nullable: true) . ";\n";
-            $toArray .= "            '{$field->name}' => \$this->{$field->name},\n";
+            $mappings .= "        \$this->{$field->name} = " . $this->buildUpdateMapExpression($field) . ";\n";
+
+            $condition = $this->buildUpdateMappedFieldCondition($field);
+            $mappedFieldsBlock .= "        if ({$condition}) {\n";
+            $mappedFieldsBlock .= "            \$mappedFields['{$field->name}'] = \$this->{$field->name};\n";
+            $mappedFieldsBlock .= "        }\n";
         }
 
         $ns = $this->requestDtoNamespace($schema);
@@ -188,14 +253,14 @@ class DtoGenerator implements CrudGeneratorInterface
         $baseShort = Fqcn::shortName($baseFqcn);
 
         return $this->renderer->render('dto/UpdateRequestDTO', [
-            'ns'         => $ns,
-            'baseFqcn'   => $baseFqcn,
-            'baseShort'  => $baseShort,
-            'resource'   => $schema->resource,
-            'properties' => $properties,
-            'rules'      => $rules,
-            'mappings'   => $mappings,
-            'toArray'    => $toArray,
+            'ns'                => $ns,
+            'baseFqcn'          => $baseFqcn,
+            'baseShort'         => $baseShort,
+            'resource'          => $schema->resource,
+            'properties'        => $properties,
+            'rules'             => $rules,
+            'mappings'          => $mappings,
+            'mappedFieldsBlock' => $mappedFieldsBlock,
         ]);
     }
 

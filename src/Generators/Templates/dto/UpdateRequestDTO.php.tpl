@@ -11,6 +11,9 @@ use OpenApi\Attributes as OA;
 readonly class {resource}UpdateRequestDTO extends {baseShort}
 {
 {properties}
+    /** @var array<string, mixed> */
+    private array $mappedFields;
+
     /**
      * @return array<string, string>
      */
@@ -21,18 +24,29 @@ readonly class {resource}UpdateRequestDTO extends {baseShort}
     }
 
     /**
+     * NOT NULL fields never accept an explicit null in the payload — treated
+     * the same as omitting the field, matching the DB constraint. Nullable
+     * fields preserve an explicit null through to toArray(), so a client
+     * sending {"field": null} actually clears that column in the update.
+     * Telling "omitted" and "explicitly null" apart requires
+     * array_key_exists() here — isset()/?? alone cannot: both read as
+     * false/null whether the key is absent or present-with-null.
+     *
      * @param array<string, mixed> $data
      */
     protected function map(array $data): void
     {
-{mappings}    }
+{mappings}
+        $mappedFields = [];
+{mappedFieldsBlock}
+        $this->mappedFields = $mappedFields;
+    }
 
     /**
      * @return array<string, mixed>
      */
     public function toArray(): array
     {
-        return array_filter([
-{toArray}        ], static fn (mixed $value): bool => $value !== null);
+        return $this->mappedFields;
     }
 }
