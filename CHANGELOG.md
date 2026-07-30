@@ -4,6 +4,17 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- **`DtoGenerator` — scaffolded `*UpdateRequestDTO`s could never clear a nullable field.** `toArray()` wrapped the whole payload in `array_filter($v !== null)`, which silently dropped *any* field the client sent as `null` — including an intentional `{"field": null}` meant to clear a nullable column. Combined with `map()` resolving values via `isset($data[x])` (which reads `false` both when the key is absent *and* when it is present with a `null` value), there was no way for a client to distinguish "leave this field alone" from "clear this field" — both collapsed to the same missing key in the outgoing update payload, so the value silently stayed unchanged. Discovered while diagnosing a "Quitar imagen" (remove image) button that never worked in a downstream project's admin UI; auditing further showed the same pattern hand-copied into 23 already-scaffolded `*UpdateRequestDTO`s across that project's four services (hub + three domain apps), so the fix belongs here, at the source, not in each generated file. `DtoGenerator::updateRequestDto()` now tracks field presence per field into a `$mappedFields` accumulator, keyed off `Field::$nullable` — the same flag that already controls the generated migration's `'null' => true/false`, so a field's clearability in the Update DTO now matches its actual DB constraint by construction:
+  - **NOT NULL fields** are only recorded when `map()` resolved a real, non-null value — an explicit `null` is treated the same as omitting the field, same as before. Never writes `NULL` into a NOT NULL column.
+  - **Nullable fields** are recorded whenever the key was present in the payload at all, even when the resolved value is `null` — this is what lets `{"field": null}` actually reach `toArray()` and clear the column.
+  - Nullable `int`/`float`/`string` fields additionally treat an empty string (`''`) as "no value" — an HTML form's blank text/number input — so it clears the column the same as `null`, rather than silently coercing to `0`/`''`. NOT NULL fields never take this shortcut; an empty string there is a validation concern (`rules()`), not an implicit "leave unchanged".
+  - `array`-typed fields now require `is_array($data[x])` in addition to presence, instead of blindly `(array)`-casting whatever was sent (a scalar would previously have been silently wrapped into a single-element array).
+  - `toArray()` is now just `return $this->mappedFields;` — no more `array_filter`.
+  New regression test `DtoGeneratorTest::testUpdateRequestDtoPreservesExplicitNullOnlyForNullableFields()` asserts the exact generated `map()`/`toArray()` shape for both a NOT NULL and a nullable field. The `testUpdateRequestDtoSnapshot` baseline was regenerated (`--update-snapshots`) — its 3-field canonical schema has no nullable field, so the snapshot alone would not have exercised the fix; the dedicated test above covers that case explicitly.
+- **`CreateRequestDTO` and `ResponseDTO` generation are unaffected** — `map()`/`buildMapExpression()` (the Create-DTO code path) already had no such ambiguity: every Create field is expected to be sent, so there is no "omitted vs. explicitly null" distinction to make. Only `buildUpdateMapExpression()` (new, Update-DTO-only) needed the presence-tracking logic.
+
 ## [1.1.2] — 2026-07-24
 
 ### Security
