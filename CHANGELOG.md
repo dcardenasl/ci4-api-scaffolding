@@ -4,7 +4,48 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
-## [1.1.3] — 2026-07-30
+## [1.2.0] — 2026-08-06
+
+> Renumbered from the unreleased `1.1.3` — the DTO null-clearing fix below was cut as a patch, but
+> `--translatable`/`--sluggable` (this version's headline addition) is a feature, and the two were
+> still unreleased together. SemVer requires the combined unreleased content to ship as the higher
+> of the two bumps.
+
+### Added
+
+- **`make:crud --translatable` / `--sluggable=<field>` (LOC-007)** — scaffolds resources that compose
+  `dcardenasl/ci4-api-core` v1.2.0's content-localization runtime instead of hand-wiring it per project
+  (the exact ~50-line trait-aliasing block that had been copied by hand into 3-4 services per downstream
+  project). A `translatable` field-string modifier (`title:string:required|translatable`) registers the
+  field for locale-aware translation; `--sluggable=<field>` additionally generates locale-aware public
+  slugs from a translatable `string` field.
+  - `Core\Field::$translatable` and `Core\ResourceSchema::$sluggableField` (+ `hasTranslatableFields()`,
+    `translatableFieldNames()`, `isSluggable()`, `localizationResourceType()`).
+  - `ServiceGenerator` composes `HasLocalizedTranslations` alone, or both `HasLocalizedTranslations` +
+    `HasPublicSlugs` (with the required trait aliasing and the six lifecycle-hook overrides) when the
+    resource is also sluggable — matching `ci4-api-core`'s `docs/EXTENDING_LOCALIZATION.md` §6 example
+    exactly. Constructor gains `LocalizedTranslationStore` (+ `PublicSlugStore` when sluggable) params.
+  - `DtoGenerator` adds a `translations` property (via `NormalizesLocalizedPayload`) to the Create/Update
+    RequestDTOs, and `translations`/`localized` (+ `slug`/`slugs` when sluggable) to the ResponseDTO —
+    without these, `ResponseDTO::fromArray()`'s explicit key-mapping would silently drop the fields the
+    core traits inject into the response payload.
+  - `ConfigWireman` gains `registerTranslatableFields()`: auto-creates `app/Config/Localization.php` on
+    first use (mirrors `registerPermissions()`'s handling of `DomainPermissions.php`) and appends the
+    resource's translatable fields to `$translatableFields` via AST injection — idempotent, best-effort
+    like the existing permissions registration.
+  - `module:check` gains a checkpoint: if the generated Service composes `HasLocalizedTranslations` /
+    `HasPublicSlugs`, verify `Config\Services::localizedTranslationStore()` / `publicSlugStore()` (and
+    `Config\Localization`) actually exist in the consumer app, with a message pointing at
+    `EXTENDING_LOCALIZATION.md` — without this, a missing prerequisite only surfaced as a
+    `BadMethodCallException` the first time the scaffolded service resolved.
+  - `--sluggable=<field>` validates that the named field exists, is of type `string`, and also carries
+    the `translatable` modifier — slug generation reads locale-specific values from the translation
+    store, so an untranslated source field would only ever produce one slug duplicated across locales.
+  - `ControllerGenerator`, `MigrationGenerator`, and `TestGenerator` are unaffected: translatable/sluggable
+    resources still store their translations/slugs in the app-owned `translations`/`public_slugs` sidecar
+    tables (one pair per app, not per resource — LOC-006), and the Controller/Test layers resolve the
+    Service exclusively through the `Config\Services` factory, never via a direct constructor call.
+  - `bin/make-crud.sh` forwards `--sluggable=<field>` (and `--sluggable <field>`) to `make:crud`.
 
 ### Fixed
 
