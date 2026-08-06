@@ -71,7 +71,7 @@ class {resource}Controller extends {controllerBaseShort}
     {
         return $this->handleRequest(
             function (array $dto, SecurityContext $context) use ($id): mixed {
-                if (!$context->hasPermission('{resourceLower}.read')) {
+                if (!$context->hasPermission('{permissionResource}.read')) {
                     throw new \dcardenasl\Ci4ApiCore\Exceptions\AuthorizationException(lang('Api.forbidden'));
                 }
                 return $this->{resourceLower}Service->show($id, $context);

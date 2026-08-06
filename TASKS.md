@@ -2,7 +2,7 @@
 
 > Fuente de verdad para trabajo en este repo.
 > Si una tarea impacta a consumers, referenciar también `../TASKS.md`.
-> Última actualización: 2026-08-06 (SCAFF-007 añadido: `ResponseDTO::fromArray()` no castea `created_at`/`updated_at`, encontrado verificando LOC-007 en `../TASKS.md`. Antes, 2026-06-10: SCAFF-003 upstream cerrado.)
+> Última actualización: 2026-08-06 (SCAFF-008 y SCAFF-009 corregidos y verificados el mismo día que se encontraron, en el E2E de LOC-008. Antes, mismo día: SCAFF-007 añadido, sin corregir.)
 
 ---
 
@@ -27,6 +27,18 @@
 ---
 
 ## ✅ Completadas
+
+### SCAFF-009 — `Controller.php.tpl`: `show()` usaba `{resourceLower}.read` en vez de `{permissionResource}.read` (2026-08-06)
+- **Qué**: en `src/Generators/Templates/controller/Controller.php.tpl`, el chequeo de permisos de `show()` era el único de los 5 métodos que no incluía el `permissionCodePrefix` de la app — comparaba contra un permiso (`{resource}.read` sin prefijo) que nunca se emite en el scope real de ningún JWT. `GET /{resource}/{id}` devolvía `403` incondicionalmente en cualquier proyecto con `permissionCodePrefix` no vacío, para cualquier recurso scaffoldeado, no sólo traducibles.
+- **Por qué**: encontrado durante el E2E de LOC-008 — `index`/`create`/`update` funcionaban con el mismo JWT y `show` no; confirmado leyendo el controller generado y luego el template.
+- **Fix**: una sustitución de placeholder: `{resourceLower}.read` → `{permissionResource}.read`, igual que las otras cuatro acciones.
+- **Verificado**: test de regresión nuevo `testShowUsesThePrefixedPermissionResourceLikeEveryOtherAction` en `tests/Unit/Generators/ControllerGeneratorTest.php` — usa un `permissionCodePrefix` no vacío (`'blog-domain'`, distinto del default vacío que enmascaraba el bug en `SnapshotTest`) y confirma que `show()` emite `blog-domain.article.read`, no `article.read`. `composer quality` verde (PHPStan 8, CS-Fixer, 130 tests/622 assertions).
+
+### SCAFF-008 — `ci4-domain-starter`: `Config/Scaffolding.php` traía `permissionCodePrefix: 'cms'` hardcodeado (2026-08-06)
+- **Qué**: la plantilla `vanilla` de `ci4-domain-starter` traía `permissionCodePrefix: 'cms'` fijo, sin relación con el `hub.appCode` real de cada proyecto generado — rechazaba todos los permisos scaffoldeados en el primer `domain:sync-permissions` de cualquier proyecto nuevo hasta corregirlo a mano.
+- **Por qué**: encontrado en el mismo E2E de LOC-008, scaffoldeando `Article` contra un proyecto `vanilla` recién generado por kickstart.
+- **Fix** (en `ci4-domain-starter`, no en este repo — ver `ci4-domain-starter/TASKS.md` DOM-112): `permissionCodePrefix` ahora lee `(new Hub())->appCode` en vez de un literal, reutilizando la validación fail-loud que `Config\Hub` ya tiene sobre `hub.appCode`. Sin cambios necesarios en `init.sh`/kickstart — se deriva de `.env` en runtime.
+- **Verificado**: test nuevo `tests/Unit/Config/ScaffoldingTest.php` en `ci4-domain-starter` (2 tests, dos app codes distintos). `composer quality` verde ahí (179 tests/448 assertions).
 
 ### SCAFF-003 — Contrato relation-aware para FKs scaffolded (2026-06-10)
 - **Qué**: `make:crud` ahora acepta `relation` como tipo FK-like (`field:relation:target_table:modifiers`) además de `fk`. El parser, prompt interactivo, `TypeMapper`, validación de tablas FK, reglas de validación y documentación comparten el mismo contrato que los FKs convencionales.
