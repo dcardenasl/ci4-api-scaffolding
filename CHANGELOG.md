@@ -4,6 +4,14 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+### Fixed
+
+- **`Controller.php.tpl`'s `show()` permission check (SCAFF-009)** — `GET /{resource}/{id}` compared
+  against an unprefixed `{resource}.read` permission instead of `{permissionResource}.read` like every
+  other action, so it returned `403` unconditionally in any project with a non-empty
+  `permissionCodePrefix` — the basic "read one" operation of every scaffolded resource, not just
+  translatable ones.
+
 ## [1.2.0] — 2026-08-06
 
 > Renumbered from the unreleased `1.1.3` — the DTO null-clearing fix below was cut as a patch, but
