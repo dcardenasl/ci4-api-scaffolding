@@ -4,6 +4,8 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [1.2.1] — 2026-08-06
+
 ### Fixed
 
 - **`Controller.php.tpl`'s `show()` permission check (SCAFF-009)** — `GET /{resource}/{id}` compared
