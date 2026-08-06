@@ -17,6 +17,13 @@ use dcardenasl\Ci4ApiScaffolding\Core\TypeMapper;
  *   name:fk:target_table:modifier1|modifier2
  *   name:relation:target_table:modifier1|modifier2
  *
+ * The `translatable` modifier registers the field in the consumer's
+ * `Config\Localization::$translatableFields` registry and composes
+ * `HasLocalizedTranslations` on the generated service. Combine with
+ * `make:crud --sluggable=<field>` to also compose `HasPublicSlugs` — the
+ * sluggable field must itself be `translatable` and of type `string`, since
+ * slug generation reads locale-specific values from the translation store.
+ *
  * Multiple fields are comma-separated. The caller is responsible for shell-quoting.
  */
 final class FieldStringParser
@@ -79,6 +86,7 @@ final class FieldStringParser
                 nullable: in_array('nullable', $options, true),
                 searchable: in_array('searchable', $options, true),
                 filterable: in_array('filterable', $options, true),
+                translatable: in_array('translatable', $options, true),
                 fkTable: $fkTable,
                 unique: in_array('unique', $options, true),
                 index: in_array('index', $options, true),

@@ -7,11 +7,12 @@
 # Run from your project root (the directory containing composer.json + spark).
 #
 # Usage:
-#   vendor/bin/make-crud.sh <Resource> <Domain> '<Fields>' [SoftDelete] [Route] [--migrate] [--dry-run] [--no-wire]
+#   vendor/bin/make-crud.sh <Resource> <Domain> '<Fields>' [SoftDelete] [Route] [--migrate] [--dry-run] [--no-wire] [--sluggable=<field>]
 #
 # Examples:
 #   vendor/bin/make-crud.sh Product Catalog 'name:string:required|searchable' yes
 #   vendor/bin/make-crud.sh UpaEvent Events 'title:string:required|searchable,year:int' yes upa-events
+#   vendor/bin/make-crud.sh Article Blog 'title:string:required|translatable,body:text:translatable' yes --sluggable=title
 #
 
 set -e
@@ -51,6 +52,7 @@ MIGRATE=false
 DRY_RUN=false
 NO_WIRE=false
 API_VERSION="v1"
+SLUGGABLE=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --migrate)  MIGRATE=true; shift ;;
@@ -58,6 +60,8 @@ while [[ $# -gt 0 ]]; do
         --no-wire)  NO_WIRE=true; shift ;;
         --version)  API_VERSION="${2:-v1}"; shift 2 ;;
         --version=*) API_VERSION="${1#--version=}"; shift ;;
+        --sluggable)  SLUGGABLE="${2:-}"; shift 2 ;;
+        --sluggable=*) SLUGGABLE="${1#--sluggable=}"; shift ;;
         --help|-h)
             cat <<'USAGE'
 Usage:
@@ -76,11 +80,19 @@ Flags:
   --dry-run      Show planned actions without writing files.
   --no-wire      Skip Services.php injection. Print snippets to paste manually.
   --version vN   API version for route path (default: v1). Example: --version v2
+  --sluggable=<field>
+                 Generate locale-aware public slugs from <field>. That field must
+                 also carry the 'translatable' field option. Requires ci4-api-core
+                 >= 1.2.0; see EXTENDING_LOCALIZATION.md in that package's docs/.
 
 Field Options:
-  required, nullable, searchable, filterable, unique, index
+  required, nullable, searchable, filterable, unique, index, translatable
   fk:table_name                          - Foreign key reference (validated against DB)
   fk:table_name:setnull|restrict|cascade - FK with explicit ON DELETE behavior
+
+Examples:
+  vendor/bin/make-crud.sh Article Blog \
+    'title:string:required|translatable,body:text:translatable' yes --sluggable=title
 USAGE
             exit 0
             ;;
@@ -139,6 +151,7 @@ echo "  Fields:       $FIELDS"
 echo "  Soft Delete:  $SOFT_DELETE"
 echo "  API Version:  $API_VERSION"
 [[ -n "$ROUTE" ]] && echo "  Route:        $ROUTE"
+[[ -n "$SLUGGABLE" ]] && echo "  Sluggable:    $SLUGGABLE"
 [[ "$DRY_RUN" == true ]] && echo "  Mode:         DRY RUN"
 [[ "$NO_WIRE" == true ]] && echo "  Wiring:       --no-wire (manual)"
 echo ""
@@ -151,6 +164,7 @@ echo -e "${YELLOW}Step 1: Scaffolding CRUD...${NC}"
 SPARK_FLAGS=()
 [[ -n "$ROUTE" ]] && SPARK_FLAGS+=(--route "$ROUTE")
 [[ "$API_VERSION" != "v1" ]] && SPARK_FLAGS+=(--version "$API_VERSION")
+[[ -n "$SLUGGABLE" ]] && SPARK_FLAGS+=(--sluggable "$SLUGGABLE")
 [[ "$DRY_RUN" == true ]] && SPARK_FLAGS+=(--dry-run)
 [[ "$NO_WIRE" == true ]] && SPARK_FLAGS+=(--no-wire)
 

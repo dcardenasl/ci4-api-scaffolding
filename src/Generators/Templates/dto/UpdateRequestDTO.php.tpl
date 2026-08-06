@@ -6,11 +6,11 @@ namespace {ns};
 
 use {baseFqcn};
 use OpenApi\Attributes as OA;
-
+{extraUses}
 #[OA\Schema(schema: '{resource}UpdateRequest')]
 readonly class {resource}UpdateRequestDTO extends {baseShort}
 {
-{properties}
+{traitsBlock}{properties}
     /** @var array<string, mixed> */
     private array $mappedFields;
 

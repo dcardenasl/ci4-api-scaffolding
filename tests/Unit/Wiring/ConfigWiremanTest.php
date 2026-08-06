@@ -209,6 +209,171 @@ final class ConfigWiremanTest extends TestCase
         }
     }
 
+    public function testWireCreatesAndRegistersLocalizationConfigForTranslatableResource(): void
+    {
+        $configDir = APPPATH . 'Config';
+        if (!is_dir($configDir)) {
+            mkdir($configDir, 0o777, true);
+        }
+
+        $servicesFile = $configDir . '/Services.php';
+        file_put_contents(
+            $servicesFile,
+            "<?php\n\nnamespace Config;\n\nuse CodeIgniter\\Config\\BaseService;\n\nclass Services extends BaseService\n{\n}\n",
+        );
+
+        $localizationFile = $configDir . '/Localization.php';
+        $permissionsFile = $configDir . '/DomainPermissions.php';
+        @unlink($localizationFile);
+        @unlink($permissionsFile);
+
+        $wireman = new ConfigWireman(ScaffoldingConfig::defaults());
+        $schema = new ResourceSchema(
+            resource: 'Article',
+            domain: 'Blog',
+            route: 'articles',
+            fields: [
+                new Field(name: 'title', type: 'string', translatable: true),
+                new Field(name: 'summary', type: 'text', translatable: true),
+            ],
+            sluggableField: 'title',
+        );
+
+        try {
+            $wireman->wire($schema);
+
+            $this->assertFileExists($localizationFile, 'Localization.php should be auto-created — it did not exist.');
+            $content = (string) file_get_contents($localizationFile);
+
+            $this->assertStringContainsString(
+                'class Localization extends \\dcardenasl\\Ci4ApiCore\\Config\\Localization',
+                $content
+            );
+            $this->assertStringContainsString("'article' => ['title', 'summary']", $content);
+
+            // File must stay valid PHP after the AST edit.
+            $this->assertTrue((new \PhpParser\ParserFactory())->createForHostVersion()->parse($content) !== null);
+
+            // The generated factory must pass the extra constructor args the
+            // Service actually declares (LocalizedTranslationStore + PublicSlugStore) —
+            // ArticleService::__construct() takes 4 params for a sluggable resource,
+            // and a factory that only passes 2 fails with ArgumentCountError the
+            // first time anything resolves articleService().
+            $traitContent = (string) file_get_contents($configDir . '/BlogDomainServices.php');
+            $this->assertStringContainsString('static::localizedTranslationStore()', $traitContent);
+            $this->assertStringContainsString('static::publicSlugStore()', $traitContent);
+        } finally {
+            @unlink($configDir . '/BlogDomainServices.php');
+            @unlink($localizationFile);
+            @unlink($permissionsFile);
+            @unlink($servicesFile);
+        }
+    }
+
+    /**
+     * Regression test: the auto-generated Localization.php template ships a
+     * *commented-out* usage example — `// 'article' => [...]` — as guidance.
+     * Registering a real `Article` resource (localization type `article`)
+     * must not be mistaken for "already registered" just because that exact
+     * string appears inside the comment. Caught scaffolding a real
+     * translatable Article resource into a consumer app during LOC-007
+     * verification: the entry was silently skipped and Config\Localization
+     * never actually listed the field, so runtime resolution of translatable
+     * fields for 'article' failed even though scaffolding reported success.
+     */
+    public function testRegisterTranslatableFieldsIsNotFooledByTheTemplatesCommentedExample(): void
+    {
+        $configDir = APPPATH . 'Config';
+        if (!is_dir($configDir)) {
+            mkdir($configDir, 0o777, true);
+        }
+
+        $localizationFile = $configDir . '/Localization.php';
+        // Exact shape of ConfigWireman's own auto-generated template.
+        file_put_contents($localizationFile, "<?php\n\ndeclare(strict_types=1);\n\nnamespace Config;\n\n"
+            . "class Localization extends \\dcardenasl\\Ci4ApiCore\\Config\\Localization\n{\n"
+            . "    /** @var array<string, list<string>> */\n"
+            . "    public array \$translatableFields = [\n"
+            . "        // 'article' => ['title', 'summary'],\n"
+            . "    ];\n}\n");
+
+        $wireman = new class (ScaffoldingConfig::defaults()) extends ConfigWireman {
+            public function callRegisterTranslatableFields(ResourceSchema $schema): void
+            {
+                $this->registerTranslatableFields($schema);
+            }
+        };
+
+        try {
+            $wireman->callRegisterTranslatableFields(new ResourceSchema(
+                resource: 'Article',
+                domain: 'Blog',
+                route: 'articles',
+                fields: [
+                    new Field(name: 'title', type: 'string', translatable: true),
+                    new Field(name: 'body', type: 'text', translatable: true),
+                ],
+            ));
+
+            $content = (string) file_get_contents($localizationFile);
+            $this->assertStringContainsString(
+                "'article' => ['title', 'body']",
+                $content,
+                'A real, uncommented registration for "article" must be written even though the template already has a commented-out example with the same key.'
+            );
+        } finally {
+            @unlink($localizationFile);
+        }
+    }
+
+    public function testRegisterTranslatableFieldsIsIdempotentAndSkipsNonTranslatableResources(): void
+    {
+        $configDir = APPPATH . 'Config';
+        if (!is_dir($configDir)) {
+            mkdir($configDir, 0o777, true);
+        }
+
+        $localizationFile = $configDir . '/Localization.php';
+        file_put_contents($localizationFile, "<?php\n\ndeclare(strict_types=1);\n\nnamespace Config;\n\n"
+            . "class Localization extends \\dcardenasl\\Ci4ApiCore\\Config\\Localization\n{\n"
+            . "    /** @var array<string, list<string>> */\n"
+            . "    public array \$translatableFields = [\n"
+            . "        'article' => ['title', 'summary'],\n"
+            . "    ];\n}\n");
+
+        $wireman = new class (ScaffoldingConfig::defaults()) extends ConfigWireman {
+            public function callRegisterTranslatableFields(ResourceSchema $schema): void
+            {
+                $this->registerTranslatableFields($schema);
+            }
+        };
+
+        try {
+            $before = (string) file_get_contents($localizationFile);
+
+            // Non-translatable resource: no-op, file untouched.
+            $wireman->callRegisterTranslatableFields(new ResourceSchema(
+                resource: 'Category',
+                domain: 'Blog',
+                route: 'categories',
+                fields: [new Field(name: 'name', type: 'string')],
+            ));
+            $this->assertSame($before, (string) file_get_contents($localizationFile), 'A non-translatable resource must not touch Localization.php.');
+
+            // Same resource type registered twice: second call is a no-op.
+            $wireman->callRegisterTranslatableFields(new ResourceSchema(
+                resource: 'Article',
+                domain: 'Blog',
+                route: 'articles',
+                fields: [new Field(name: 'title', type: 'string', translatable: true)],
+            ));
+            $after = (string) file_get_contents($localizationFile);
+            $this->assertSame($before, $after, 'Re-registering an already-present resource type must not duplicate the entry.');
+        } finally {
+            @unlink($localizationFile);
+        }
+    }
+
     public function testWireThrowsWhenServicesFileHasNoServicesClass(): void
     {
         // A truly malformed Services.php (no `class Services extends X` declaration

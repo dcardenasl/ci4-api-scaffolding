@@ -9,22 +9,22 @@ use {repoFqcn};
 use {mapperFqcn};
 use {interfaceNs}\{resource}ServiceInterface;
 use {serviceBaseFqcn};
-
+{localizationUses}
 /**
  * @extends {serviceBaseShort}<{resource}Entity>
  */
 class {resource}Service extends {serviceBaseShort} implements {resource}ServiceInterface
 {
-    /**
+{localizationTraits}    /**
      * @param {repoShort}<{resource}Entity> ${resourceLower}Repository
      */
     public function __construct(
         {repoShort} ${resourceLower}Repository,
-        {mapperShort} $responseMapper
+        {mapperShort} $responseMapper{localizationConstructorParams}
     ) {
         parent::__construct(${resourceLower}Repository, $responseMapper);
-    }
-
+{localizationConstructorAssignments}    }
+{localizationOverrides}
     /**
      * Domain Hooks
      *

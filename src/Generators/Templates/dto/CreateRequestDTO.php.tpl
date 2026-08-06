@@ -6,11 +6,11 @@ namespace {ns};
 
 use {baseFqcn};
 use OpenApi\Attributes as OA;
-
+{extraUses}
 #[OA\Schema(schema: '{resource}CreateRequest')]
 readonly class {resource}CreateRequestDTO extends {baseShort}
 {
-{properties}
+{traitsBlock}{properties}
     /**
      * @return array<string, string>
      */

@@ -2,7 +2,7 @@
 
 > Fuente de verdad para trabajo en este repo.
 > Si una tarea impacta a consumers, referenciar también `../TASKS.md`.
-> Última actualización: 2026-06-10 (SCAFF-003 upstream cerrado: `relation` como contrato FK-like para consumidores relation-aware)
+> Última actualización: 2026-08-06 (SCAFF-007 añadido: `ResponseDTO::fromArray()` no castea `created_at`/`updated_at`, encontrado verificando LOC-007 en `../TASKS.md`. Antes, 2026-06-10: SCAFF-003 upstream cerrado.)
 
 ---
 
@@ -14,7 +14,15 @@
 
 ## 🟡 Próximo
 
-*(vacío)*
+### SCAFF-007 — `DtoGenerator`: `ResponseDTO::fromArray()` no castea `created_at`/`updated_at`
+
+- **Qué**: `createdAt: $data['created_at'] ?? null,` / `updatedAt: $data['updated_at'] ?? null,` en el `fromArray()` que `DtoGenerator::responseDto()` emite no castean el valor a `string`. Cuando el `Entity` generado tiene `created_at`/`updated_at` en `$dates` (caso estándar), `Entity::toArray()` devuelve objetos `CodeIgniter\I18n\Time`, no strings — y como la firma del constructor es `public ?string $createdAt`, PHP lanza `TypeError: ... must be of type ?string, CodeIgniter\I18n\Time given` en cuanto `fromArray()` recibe ese valor.
+- **Por qué es real y por qué bloquea, no sólo "en teoría"**: `DtoResponseMapper::map()` prioriza `fromArray()` cuando existe (`Priority 1`) sobre el mapeo por reflexión (`Priority 2`, que sí castea vía `castValue()`). Como el template actual **siempre** emite `fromArray()`, **cualquier** recurso scaffoldeado que llegue a `mapToResponse()` con un `Entity` recién persistido revienta — no es específico de recursos `translatable`/`sluggable` (aunque se descubrió verificando LOC-007). El único ejemplo existente en `ci4-domain-starter` (`ItemResponseDTO`) no lo sufre porque es una plantilla vieja **sin** `fromArray()`, que cae al path por reflexión — es la excepción, no la regla.
+- **Repro mínimo**: scaffoldear cualquier recurso, `$service->store($dto, $context)` contra una BD real, inspeccionar la excepción en `mapToResponse()`.
+- **Fix propuesto**: en `DtoGenerator::responseDto()`, castear ambos campos igual que se castea todo lo demás: `createdAt: isset($data['created_at']) ? (string) $data['created_at'] : null,` (mismo patrón para `updatedAt`). Verificado manualmente que el cast `(string)` sobre un `CodeIgniter\I18n\Time` funciona correctamente (implementa `__toString()`).
+- **Verificación pendiente**: actualizar snapshot tests (`tests/Unit/Generators/SnapshotTest.php`, borrar `__snapshots__/*ResponseDTO*` y regenerar), y añadir un test de integración real (store→mapToResponse contra una tabla con `created_at`/`updated_at` reales, no mockeados) para que esto no vuelva a pasar inadvertido — los tests actuales del paquete sólo verifican forma del código generado (sintaxis/AST), nunca lo ejecutan contra datos reales.
+
+---
 
 ---
 

@@ -69,17 +69,148 @@ class ServiceGenerator implements CrudGeneratorInterface
         $serviceBaseShort = Fqcn::shortName($serviceBaseFqcn);
 
         return $this->renderer->render('service/Service', [
-            'ns'               => $ns,
-            'entityFqcn'       => $entityFqcn,
-            'repoFqcn'         => $repoFqcn,
-            'repoShort'        => $repoShort,
-            'mapperFqcn'       => $mapperFqcn,
-            'mapperShort'      => $mapperShort,
-            'interfaceNs'      => $interfaceNs,
-            'serviceBaseFqcn'  => $serviceBaseFqcn,
-            'serviceBaseShort' => $serviceBaseShort,
-            'resource'         => $schema->resource,
-            'resourceLower'    => $resourceLower,
+            'ns'                              => $ns,
+            'entityFqcn'                      => $entityFqcn,
+            'repoFqcn'                         => $repoFqcn,
+            'repoShort'                        => $repoShort,
+            'mapperFqcn'                       => $mapperFqcn,
+            'mapperShort'                      => $mapperShort,
+            'interfaceNs'                      => $interfaceNs,
+            'serviceBaseFqcn'                  => $serviceBaseFqcn,
+            'serviceBaseShort'                 => $serviceBaseShort,
+            'resource'                         => $schema->resource,
+            'resourceLower'                    => $resourceLower,
+            'localizationUses'                 => $this->localizationUses($schema),
+            'localizationTraits'               => $this->localizationTraits($schema),
+            'localizationConstructorParams'    => $this->localizationConstructorParams($schema),
+            'localizationConstructorAssignments' => $this->localizationConstructorAssignments($schema),
+            'localizationOverrides'            => $this->localizationOverrides($schema),
         ]);
+    }
+
+    /**
+     * Everything below composes HasLocalizedTranslations (and, when the
+     * resource is also sluggable, HasPublicSlugs) exactly as documented in
+     * ci4-api-core's docs/EXTENDING_LOCALIZATION.md — trait aliasing plus
+     * the six lifecycle-hook overrides are only needed when BOTH traits are
+     * combined; HasLocalizedTranslations alone needs no overrides at all,
+     * since its own beforeStore/afterStore/... become the class's effective
+     * hooks directly.
+     */
+    private function localizationUses(ResourceSchema $schema): string
+    {
+        if (!$schema->hasTranslatableFields()) {
+            return '';
+        }
+
+        $lines = ['use dcardenasl\\Ci4ApiCore\\Localization\\LocalizedTranslationStore;'];
+        if ($schema->isSluggable()) {
+            $lines[] = 'use dcardenasl\\Ci4ApiCore\\Dto\\DataTransferObjectInterface;';
+            $lines[] = 'use dcardenasl\\Ci4ApiCore\\Dto\\SecurityContext;';
+            $lines[] = 'use dcardenasl\\Ci4ApiCore\\Localization\\PublicSlugStore;';
+            $lines[] = 'use dcardenasl\\Ci4ApiCore\\Services\\HasLocalizedTranslations;';
+            $lines[] = 'use dcardenasl\\Ci4ApiCore\\Services\\HasPublicSlugs;';
+        } else {
+            $lines[] = 'use dcardenasl\\Ci4ApiCore\\Services\\HasLocalizedTranslations;';
+        }
+        sort($lines);
+
+        return implode("\n", $lines) . "\n";
+    }
+
+    private function localizationTraits(ResourceSchema $schema): string
+    {
+        if (!$schema->hasTranslatableFields()) {
+            return '';
+        }
+
+        if (!$schema->isSluggable()) {
+            return "    use HasLocalizedTranslations;\n\n";
+        }
+
+        return "    use HasLocalizedTranslations {\n"
+            . "        beforeStore as private localizedBeforeStore;\n"
+            . "        afterStore as private localizedAfterStore;\n"
+            . "        beforeUpdate as private localizedBeforeUpdate;\n"
+            . "        afterUpdate as private localizedAfterUpdate;\n"
+            . "        enrichEntities as private localizedEnrichEntities;\n"
+            . "        mapToResponse as private localizedMapToResponse;\n"
+            . "    }\n"
+            . "    use HasPublicSlugs;\n\n";
+    }
+
+    private function localizationConstructorParams(ResourceSchema $schema): string
+    {
+        if (!$schema->hasTranslatableFields()) {
+            return '';
+        }
+
+        if (!$schema->isSluggable()) {
+            return ",\n        LocalizedTranslationStore \$translationStore";
+        }
+
+        return ",\n        LocalizedTranslationStore \$translationStore,\n        PublicSlugStore \$slugStore";
+    }
+
+    private function localizationConstructorAssignments(ResourceSchema $schema): string
+    {
+        if (!$schema->hasTranslatableFields()) {
+            return '';
+        }
+
+        $resourceType = $schema->localizationResourceType();
+        $lines = [
+            "        \$this->translationStore = \$translationStore;",
+            "        \$this->localizedResourceType = '{$resourceType}';",
+        ];
+
+        if ($schema->isSluggable()) {
+            $lines[] = "        \$this->slugStore = \$slugStore;";
+            $lines[] = "        \$this->slugResourceType = '{$resourceType}';";
+            $lines[] = "        \$this->slugSourceField = '{$schema->sluggableField}';";
+        }
+
+        return implode("\n", $lines) . "\n";
+    }
+
+    private function localizationOverrides(ResourceSchema $schema): string
+    {
+        if (!$schema->hasTranslatableFields() || !$schema->isSluggable()) {
+            return '';
+        }
+
+        return "\n"
+            . "    /** @param array<string, mixed> \$data */\n"
+            . "    protected function beforeStore(array \$data, ?SecurityContext \$context): array\n"
+            . "    {\n"
+            . "        \$this->pendingManualSlugs = \$this->extractManualSlugs(\$data);\n\n"
+            . "        return \$this->localizedBeforeStore(\$data, \$context);\n"
+            . "    }\n\n"
+            . "    protected function afterStore(object \$entity, ?SecurityContext \$context): void\n"
+            . "    {\n"
+            . "        \$this->localizedAfterStore(\$entity, \$context);\n"
+            . "        \$this->syncPublicSlugs(\$entity);\n"
+            . "    }\n\n"
+            . "    /** @param array<string, mixed> \$data */\n"
+            . "    protected function beforeUpdate(int \$id, array \$data, ?SecurityContext \$context): array\n"
+            . "    {\n"
+            . "        \$this->pendingManualSlugs = \$this->extractManualSlugs(\$data);\n\n"
+            . "        return \$this->localizedBeforeUpdate(\$id, \$data, \$context);\n"
+            . "    }\n\n"
+            . "    protected function afterUpdate(object \$entity, ?SecurityContext \$context): void\n"
+            . "    {\n"
+            . "        \$this->localizedAfterUpdate(\$entity, \$context);\n"
+            . "        \$this->syncPublicSlugs(\$entity);\n"
+            . "    }\n\n"
+            . "    /** @param array<int, object> \$entities */\n"
+            . "    protected function enrichEntities(array \$entities): array\n"
+            . "    {\n"
+            . "        return \$this->attachSlugs(\$this->localizedEnrichEntities(\$entities));\n"
+            . "    }\n\n"
+            . "    protected function mapToResponse(object \$entity): DataTransferObjectInterface\n"
+            . "    {\n"
+            . "        \$this->attachSlugsToEntity(\$entity);\n\n"
+            . "        return \$this->localizedMapToResponse(\$entity);\n"
+            . "    }\n";
     }
 }

@@ -204,6 +204,13 @@ class DtoGenerator implements CrudGeneratorInterface
             $toArray .= "            '{$field->name}' => \$this->{$field->name},\n";
         }
 
+        if ($schema->hasTranslatableFields()) {
+            $properties .= $this->translationsPropertyAttribute();
+            $properties .= "    public array \$translations;\n";
+            $mappings .= "        \$this->translations = self::normalizeTranslationRows(\$data['translations'] ?? []);\n";
+            $toArray .= "            'translations' => \$this->translations,\n";
+        }
+
         $ns = $this->requestDtoNamespace($schema);
         $baseFqcn = $this->config->requestDtoBaseClass;
         $baseShort = Fqcn::shortName($baseFqcn);
@@ -217,7 +224,38 @@ class DtoGenerator implements CrudGeneratorInterface
             'rules'      => $rules,
             'mappings'   => $mappings,
             'toArray'    => $toArray,
+            'extraUses'  => $this->localizedPayloadUses($schema),
+            'traitsBlock' => $this->localizedPayloadTraitsBlock($schema),
         ]);
+    }
+
+    /**
+     * `translations`/`slug`/`slugs`/`localized` are sidecar fields, not real
+     * DB columns, so they have no Field/TypeMapper entry — these emit their
+     * OA\Property + declaration lines directly, matching buildPropertyAttribute()'s
+     * style for the fields that do go through TypeMapper.
+     */
+    private function translationsPropertyAttribute(): string
+    {
+        return "    #[OA\\Property(description: 'Per-locale translation rows: [{locale, ...fields}] (or {locale, fields:{...}} / a locale-keyed map)', type: 'array', items: new OA\\Items(type: 'object'))]\n";
+    }
+
+    private function localizedPayloadUses(ResourceSchema $schema): string
+    {
+        if (!$schema->hasTranslatableFields()) {
+            return '';
+        }
+
+        return "use dcardenasl\\Ci4ApiCore\\Dto\\Concerns\\NormalizesLocalizedPayload;\n";
+    }
+
+    private function localizedPayloadTraitsBlock(ResourceSchema $schema): string
+    {
+        if (!$schema->hasTranslatableFields()) {
+            return '';
+        }
+
+        return "    use NormalizesLocalizedPayload;\n\n";
     }
 
     private function updateRequestDto(ResourceSchema $schema): string
@@ -248,6 +286,22 @@ class DtoGenerator implements CrudGeneratorInterface
             $mappedFieldsBlock .= "        }\n";
         }
 
+        if ($schema->hasTranslatableFields()) {
+            $properties .= $this->translationsPropertyAttribute();
+            $properties .= "    public array \$translations;\n";
+            $mappings .= "        \$this->translations = self::normalizeTranslationRows(\$data['translations'] ?? []);\n";
+
+            // Unlike every other field, presence here is tracked against the
+            // RAW incoming payload, not against the resolved value — an
+            // update that omits `translations` entirely must leave existing
+            // translations untouched (HasLocalizedTranslations::beforeUpdate()
+            // reads array_key_exists('translations', $data) to tell "not
+            // provided" apart from "provided as []", which clears every row).
+            $mappedFieldsBlock .= "        if (array_key_exists('translations', \$data)) {\n";
+            $mappedFieldsBlock .= "            \$mappedFields['translations'] = \$this->translations;\n";
+            $mappedFieldsBlock .= "        }\n";
+        }
+
         $ns = $this->requestDtoNamespace($schema);
         $baseFqcn = $this->config->requestDtoBaseClass;
         $baseShort = Fqcn::shortName($baseFqcn);
@@ -261,6 +315,8 @@ class DtoGenerator implements CrudGeneratorInterface
             'rules'             => $rules,
             'mappings'          => $mappings,
             'mappedFieldsBlock' => $mappedFieldsBlock,
+            'extraUses'         => $this->localizedPayloadUses($schema),
+            'traitsBlock'       => $this->localizedPayloadTraitsBlock($schema),
         ]);
     }
 
@@ -287,6 +343,42 @@ class DtoGenerator implements CrudGeneratorInterface
 
             $toArray .= "            '{$field->name}' => \$this->{$field->name},\n";
             $fromArrayMappings .= "            {$field->name}: " . $this->buildMapExpression($field) . ",\n";
+        }
+
+        // `translations`/`localized` are injected by HasLocalizedTranslations::mapToResponse()
+        // into the raw array payload before it reaches the response mapper; `slug`/`slugs` are
+        // injected onto the Entity by HasPublicSlugs before that. None of the four are real DB
+        // columns, so — unlike every field above — they have no Field/TypeMapper entry and must
+        // be declared here directly or fromArray() would silently drop them (it only ever reads
+        // the keys it's told to read).
+        if ($schema->hasTranslatableFields()) {
+            $requiredFields[] = 'translations';
+            $requiredFields[] = 'localized';
+
+            $params .= "\n        #[OA\\Property(description: 'Per-locale translation rows: [{locale, ...fields}]', type: 'array', items: new OA\\Items(type: 'object'))]\n";
+            $params .= "        public array \$translations,";
+            $params .= "\n        #[OA\\Property(description: 'Fields resolved for the request locale, with fallback applied', type: 'object')]\n";
+            $params .= "        public array \$localized,";
+
+            $toArray .= "            'translations' => \$this->translations,\n";
+            $toArray .= "            'localized' => \$this->localized,\n";
+            $fromArrayMappings .= "            translations: is_array(\$data['translations'] ?? null) ? \$data['translations'] : [],\n";
+            $fromArrayMappings .= "            localized: is_array(\$data['localized'] ?? null) ? \$data['localized'] : [],\n";
+        }
+
+        if ($schema->isSluggable()) {
+            $requiredFields[] = 'slug';
+            $requiredFields[] = 'slugs';
+
+            $params .= "\n        #[OA\\Property(description: 'Slug resolved for the request locale, falling back to the legacy locale', type: 'string')]\n";
+            $params .= "        public string \$slug,";
+            $params .= "\n        #[OA\\Property(description: 'Locale => slug map for every locale this resource has a slug in', type: 'object', additionalProperties: new OA\\AdditionalProperties(type: 'string'))]\n";
+            $params .= "        public array \$slugs,";
+
+            $toArray .= "            'slug' => \$this->slug,\n";
+            $toArray .= "            'slugs' => \$this->slugs,\n";
+            $fromArrayMappings .= "            slug: (string) (\$data['slug'] ?? ''),\n";
+            $fromArrayMappings .= "            slugs: is_array(\$data['slugs'] ?? null) ? \$data['slugs'] : [],\n";
         }
 
         $requiredJson = json_encode($requiredFields);

@@ -77,6 +77,9 @@ class ConfigWireman
 
         // 3. Permissions registration
         $this->registerPermissions($schema);
+
+        // 4. Content-localization registry (best-effort, mirrors registerPermissions)
+        $this->registerTranslatableFields($schema);
     }
 
     /**
@@ -158,6 +161,99 @@ class ConfigWireman
         if ($edited !== null) {
             file_put_contents($permissionsFile, $edited);
         }
+    }
+
+    /**
+     * Register the resource's translatable field names under its
+     * localization resource type in `Config\Localization::$translatableFields`.
+     *
+     * Best-effort, like registerPermissions(): if the file is missing it is
+     * created from a minimal template that extends the core registry (see
+     * ci4-api-core's EXTENDING_LOCALIZATION.md); if the property can't be
+     * located or the entry already exists, this silently no-ops rather than
+     * failing the whole scaffold — a consumer can always finish the wiring
+     * by hand. Requires ci4-api-core >= 1.2.0 for `Config\Localization` to
+     * exist at all; a missing dependency surfaces as a require-once error
+     * the consumer will see immediately, not a silent skip here.
+     */
+    protected function registerTranslatableFields(ResourceSchema $schema): void
+    {
+        if (!$schema->hasTranslatableFields()) {
+            return;
+        }
+
+        $configFile = APPPATH . 'Config/Localization.php';
+        if (!file_exists($configFile)) {
+            file_put_contents($configFile, $this->localizationConfigTemplate());
+        }
+
+        $resourceType = $schema->localizationResourceType();
+        $content = (string) file_get_contents($configFile);
+        $fieldNames = $schema->translatableFieldNames();
+
+        // The idempotency check is done inside the AST callback, against
+        // actual array keys — not with a raw str_contains() on file text.
+        // The auto-generated template ships a *commented-out* example entry
+        // (`// 'article' => [...]`) as usage guidance; a text search would
+        // treat that comment as an existing registration and silently skip
+        // real ones for any resource type that happens to match it.
+        $edited = $this->astEditor->edit($content, static function (array &$stmts) use ($resourceType, $fieldNames): bool {
+            $finder = new NodeFinder();
+            $class = $finder->findFirstInstanceOf($stmts, Node\Stmt\Class_::class);
+            if ($class === null || $class->name?->name !== 'Localization') {
+                return false;
+            }
+
+            foreach ($class->stmts as $stmt) {
+                if (!$stmt instanceof Node\Stmt\Property) {
+                    continue;
+                }
+                $prop = $stmt->props[0] ?? null;
+                if ($prop === null || $prop->name->name !== 'translatableFields' || !$prop->default instanceof Node\Expr\Array_) {
+                    continue;
+                }
+
+                foreach ($prop->default->items as $item) {
+                    if ($item->key instanceof Node\Scalar\String_ && $item->key->value === $resourceType) {
+                        return false; // Already registered — idempotent, no edit needed
+                    }
+                }
+
+                $prop->default->items[] = new Node\Expr\ArrayItem(
+                    new Node\Expr\Array_(array_map(
+                        static fn (string $field): Node\ArrayItem => new Node\ArrayItem(new Node\Scalar\String_($field)),
+                        $fieldNames,
+                    )),
+                    new Node\Scalar\String_($resourceType),
+                );
+
+                return true;
+            }
+
+            return false;
+        });
+
+        if ($edited !== null) {
+            file_put_contents($configFile, $edited);
+        }
+    }
+
+    private function localizationConfigTemplate(): string
+    {
+        return <<<'PHP'
+<?php
+
+declare(strict_types=1);
+
+namespace Config;
+
+class Localization extends \dcardenasl\Ci4ApiCore\Config\Localization
+{
+    /** @var array<string, list<string>> */
+    public array $translatableFields = [
+    ];
+}
+PHP;
     }
 
     private function permissionCodePrefix(): string
@@ -356,6 +452,21 @@ PHP;
         $serviceImplFqcn = '\\' . $this->config->namespaceFor($this->config->paths->services) . "\\{$domain}\\{$resource}Service";
         $modelFqcn = '\\' . $this->config->namespaceFor($this->config->paths->models) . "\\{$resource}Model";
 
+        // ServiceGenerator adds LocalizedTranslationStore (+ PublicSlugStore when
+        // sluggable) as extra constructor params on the generated Service — the
+        // factory call built here must pass them, or the constructor's arg count
+        // mismatches at the very first resolution. These resolve through the
+        // consumer's own localizedTranslationStore()/publicSlugStore() factories
+        // (see EXTENDING_LOCALIZATION.md §4), which this package cannot wire
+        // itself — they need consumer model FQCNs it has no way to know.
+        $extraArgs = '';
+        if ($schema->hasTranslatableFields()) {
+            $extraArgs .= ",\n            static::localizedTranslationStore()";
+            if ($schema->isSluggable()) {
+                $extraArgs .= ",\n            static::publicSlugStore()";
+            }
+        }
+
         return "\n    public static function {$mapperName}(bool \$getShared = true): {$mapperIface}\n"
             . "    {\n"
             . "        if (\$getShared) {\n"
@@ -372,7 +483,7 @@ PHP;
             . "        }\n\n"
             . "        return new {$serviceImplFqcn}(\n"
             . "            new {$repoImpl}(model({$modelFqcn}::class)),\n"
-            . "            static::{$mapperName}()\n"
+            . "            static::{$mapperName}(){$extraArgs}\n"
             . "        );\n"
             . "    }\n";
     }

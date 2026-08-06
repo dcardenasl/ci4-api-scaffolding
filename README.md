@@ -271,6 +271,7 @@ name:relation:target_table:modifier1|modifier2
 | `filterable` | Adds field to the model's `$filterableFields` whitelist |
 | `unique` | Adds `UNIQUE` index + `is_unique[table.column]` validation |
 | `index` | Adds a plain (non-unique) index |
+| `translatable` | Registers the field in `Config\Localization::$translatableFields`; the generated service composes `HasLocalizedTranslations`. Requires `dcardenasl/ci4-api-core` >= 1.2.0. |
 | `cascade` | FK/relation only — `ON DELETE CASCADE` (default for `fk` and `relation` fields) |
 | `restrict` | FK/relation only — `ON DELETE RESTRICT` |
 | `setnull` | FK/relation only — `ON DELETE SET NULL` |
@@ -280,6 +281,27 @@ Full example:
 ```
 'title:string:required|searchable,price:decimal:required|filterable,author_id:fk:users:required|restrict'
 ```
+
+### Content localization (`translatable` / `--sluggable`)
+
+A `translatable` field is registered for locale-aware translation. Pass `--sluggable=<field>` to also
+generate locale-aware public slugs from a translatable `string` field:
+
+```bash
+bash vendor/bin/make-crud.sh Article Blog \
+  'title:string:required|translatable,body:text:translatable,author_id:fk:users' \
+  yes --sluggable=title
+```
+
+This composes `dcardenasl\Ci4ApiCore\Services\HasLocalizedTranslations` (and `HasPublicSlugs` when
+sluggable) on the generated service, adds a `translations` payload to the Create/Update request DTOs,
+and adds `translations`/`localized` (plus `slug`/`slugs` when sluggable) to the response DTO.
+
+**Prerequisite:** the consumer app must already have `Config\Services::localizedTranslationStore()` /
+`publicSlugStore()` wired (a one-time, app-level setup — see `EXTENDING_LOCALIZATION.md` in
+`dcardenasl/ci4-api-core`'s docs, §1-4), since the sidecar `translations`/`public_slugs` tables belong to
+the app, not to any one resource. `php spark module:check` verifies this and fails with a clear message
+pointing at that guide if the factories are missing.
 
 **Boolean validation contract** — `bool` currently maps to `boolean_like`, which is part of the supported starter contract (`ci4-api-starter` and `ci4-domain-starter` both ship and register that custom rule). If a non-starter consumer uses this package, it must expose an equivalent `boolean_like` validation rule or adapt the generated rule set after scaffolding.
 
