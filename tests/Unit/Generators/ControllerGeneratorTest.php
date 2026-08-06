@@ -97,6 +97,49 @@ final class ControllerGeneratorTest extends TestCase
         $this->assertStringContainsString('hasPermission(\'article.update\')', $controllerContent);
     }
 
+    public function testShowUsesThePrefixedPermissionResourceLikeEveryOtherAction(): void
+    {
+        $d = ScaffoldingConfig::defaults();
+        $config = new ScaffoldingConfig(
+            controllerBaseClass: $d->controllerBaseClass,
+            serviceBaseClass: $d->serviceBaseClass,
+            serviceContractInterface: $d->serviceContractInterface,
+            modelBaseClass: $d->modelBaseClass,
+            entityBaseClass: $d->entityBaseClass,
+            migrationBaseClass: $d->migrationBaseClass,
+            requestDtoBaseClass: $d->requestDtoBaseClass,
+            responseDtoInterface: $d->responseDtoInterface,
+            repositoryInterface: $d->repositoryInterface,
+            responseMapperInterface: $d->responseMapperInterface,
+            repositoryImplementation: $d->repositoryImplementation,
+            responseMapperImplementation: $d->responseMapperImplementation,
+            servicesFactoryClass: $d->servicesFactoryClass,
+            paths: $d->paths,
+            protectedRouteFilters: $d->protectedRouteFilters,
+            permissionCodePrefix: 'blog-domain',
+        );
+        $generator = new ControllerGenerator($config);
+        $schema = new ResourceSchema(
+            resource: 'Article',
+            domain: 'Blog',
+            route: 'articles',
+            fields: [new Field(name: 'title', type: 'string')],
+        );
+
+        $artifacts = $generator->generate($schema);
+        $controllerContent = '';
+        foreach ($artifacts as $path => $content) {
+            if (str_contains($path, 'ArticleController')) {
+                $controllerContent = $content;
+                break;
+            }
+        }
+
+        $this->assertNotEmpty($controllerContent);
+        $this->assertStringContainsString('hasPermission(\'blog-domain.article.read\')', $controllerContent);
+        $this->assertStringNotContainsString('hasPermission(\'article.read\')', $controllerContent);
+    }
+
     public function testConditionalTraitNotInjectedWhenFieldAbsent(): void
     {
         $config = self::defaultsWithTraits(['slug' => 'App\\Traits\\Controllers\\HasSlugActions']);
