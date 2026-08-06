@@ -179,6 +179,50 @@ final class EndToEndScaffoldTest extends TestCase
         $orchestrator->orchestrate($this->buildSampleSchema());
     }
 
+    /**
+     * LOC-007: a resource with translatable fields and a public slug pulls
+     * in a different code path across DtoGenerator (translations/localized/
+     * slug/slugs) and ServiceGenerator (HasLocalizedTranslations +
+     * HasPublicSlugs composition) than the flat baseline above exercises.
+     * This is the same cross-generator safety net testFullScaffoldProduces...()
+     * already provides for the standard case, applied to the translatable one.
+     */
+    public function testFullScaffoldForTranslatableSluggableResourceProducesSyntacticallyValidPhp(): void
+    {
+        $orchestrator = new ScaffoldingOrchestrator(ScaffoldingConfig::defaults());
+
+        $createdFiles = $orchestrator->orchestrate($this->buildTranslatableSampleSchema());
+
+        $this->assertGreaterThanOrEqual(13, count($createdFiles));
+
+        foreach ($createdFiles as $path) {
+            $this->assertFileExists($path);
+            if (str_ends_with($path, '.php')) {
+                $this->assertPhpFileParsesClean($path);
+            }
+        }
+
+        $byBasename = [];
+        foreach ($createdFiles as $path) {
+            $byBasename[basename($path)] = $path;
+        }
+
+        $service = (string) file_get_contents($byBasename['ArticleService.php']);
+        $this->assertStringContainsString('use HasLocalizedTranslations {', $service);
+        $this->assertStringContainsString('use HasPublicSlugs;', $service);
+        $this->assertStringContainsString("\$this->localizedResourceType = 'article';", $service);
+        $this->assertStringContainsString("\$this->slugSourceField = 'title';", $service);
+
+        $response = (string) file_get_contents($byBasename['ArticleResponseDTO.php']);
+        $this->assertStringContainsString('public array $translations,', $response);
+        $this->assertStringContainsString('public array $localized,', $response);
+        $this->assertStringContainsString('public string $slug,', $response);
+        $this->assertStringContainsString('public array $slugs,', $response);
+
+        $create = (string) file_get_contents($byBasename['ArticleCreateRequestDTO.php']);
+        $this->assertStringContainsString('use NormalizesLocalizedPayload;', $create);
+    }
+
     // ===================== helpers =====================
 
     private function buildSampleSchema(): ResourceSchema
@@ -192,6 +236,21 @@ final class EndToEndScaffoldTest extends TestCase
                 new Field(name: 'price', type: 'decimal', required: true, filterable: true, precision: '10,2'),
                 new Field(name: 'in_stock', type: 'bool', required: false),
             ],
+        );
+    }
+
+    private function buildTranslatableSampleSchema(): ResourceSchema
+    {
+        return new ResourceSchema(
+            resource: 'Article',
+            domain: 'Blog',
+            route: 'articles',
+            fields: [
+                new Field(name: 'title', type: 'string', required: true, searchable: true, translatable: true),
+                new Field(name: 'summary', type: 'text', required: false, nullable: true, translatable: true),
+                new Field(name: 'author_id', type: 'int', required: true),
+            ],
+            sluggableField: 'title',
         );
     }
 

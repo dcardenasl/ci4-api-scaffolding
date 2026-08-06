@@ -4,6 +4,60 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [1.2.0] — 2026-08-06
+
+> Renumbered from the unreleased `1.1.3` — the DTO null-clearing fix below was cut as a patch, but
+> `--translatable`/`--sluggable` (this version's headline addition) is a feature, and the two were
+> still unreleased together. SemVer requires the combined unreleased content to ship as the higher
+> of the two bumps.
+
+### Added
+
+- **`make:crud --translatable` / `--sluggable=<field>` (LOC-007)** — scaffolds resources that compose
+  `dcardenasl/ci4-api-core` v1.2.0's content-localization runtime instead of hand-wiring it per project
+  (the exact ~50-line trait-aliasing block that had been copied by hand into 3-4 services per downstream
+  project). A `translatable` field-string modifier (`title:string:required|translatable`) registers the
+  field for locale-aware translation; `--sluggable=<field>` additionally generates locale-aware public
+  slugs from a translatable `string` field.
+  - `Core\Field::$translatable` and `Core\ResourceSchema::$sluggableField` (+ `hasTranslatableFields()`,
+    `translatableFieldNames()`, `isSluggable()`, `localizationResourceType()`).
+  - `ServiceGenerator` composes `HasLocalizedTranslations` alone, or both `HasLocalizedTranslations` +
+    `HasPublicSlugs` (with the required trait aliasing and the six lifecycle-hook overrides) when the
+    resource is also sluggable — matching `ci4-api-core`'s `docs/EXTENDING_LOCALIZATION.md` §6 example
+    exactly. Constructor gains `LocalizedTranslationStore` (+ `PublicSlugStore` when sluggable) params.
+  - `DtoGenerator` adds a `translations` property (via `NormalizesLocalizedPayload`) to the Create/Update
+    RequestDTOs, and `translations`/`localized` (+ `slug`/`slugs` when sluggable) to the ResponseDTO —
+    without these, `ResponseDTO::fromArray()`'s explicit key-mapping would silently drop the fields the
+    core traits inject into the response payload.
+  - `ConfigWireman` gains `registerTranslatableFields()`: auto-creates `app/Config/Localization.php` on
+    first use (mirrors `registerPermissions()`'s handling of `DomainPermissions.php`) and appends the
+    resource's translatable fields to `$translatableFields` via AST injection — idempotent, best-effort
+    like the existing permissions registration.
+  - `module:check` gains a checkpoint: if the generated Service composes `HasLocalizedTranslations` /
+    `HasPublicSlugs`, verify `Config\Services::localizedTranslationStore()` / `publicSlugStore()` (and
+    `Config\Localization`) actually exist in the consumer app, with a message pointing at
+    `EXTENDING_LOCALIZATION.md` — without this, a missing prerequisite only surfaced as a
+    `BadMethodCallException` the first time the scaffolded service resolved.
+  - `--sluggable=<field>` validates that the named field exists, is of type `string`, and also carries
+    the `translatable` modifier — slug generation reads locale-specific values from the translation
+    store, so an untranslated source field would only ever produce one slug duplicated across locales.
+  - `ControllerGenerator`, `MigrationGenerator`, and `TestGenerator` are unaffected: translatable/sluggable
+    resources still store their translations/slugs in the app-owned `translations`/`public_slugs` sidecar
+    tables (one pair per app, not per resource — LOC-006), and the Controller/Test layers resolve the
+    Service exclusively through the `Config\Services` factory, never via a direct constructor call.
+  - `bin/make-crud.sh` forwards `--sluggable=<field>` (and `--sluggable <field>`) to `make:crud`.
+
+### Fixed
+
+- **`DtoGenerator` — scaffolded `*UpdateRequestDTO`s could never clear a nullable field.** `toArray()` wrapped the whole payload in `array_filter($v !== null)`, which silently dropped *any* field the client sent as `null` — including an intentional `{"field": null}` meant to clear a nullable column. Combined with `map()` resolving values via `isset($data[x])` (which reads `false` both when the key is absent *and* when it is present with a `null` value), there was no way for a client to distinguish "leave this field alone" from "clear this field" — both collapsed to the same missing key in the outgoing update payload, so the value silently stayed unchanged. Discovered while diagnosing a "Quitar imagen" (remove image) button that never worked in a downstream project's admin UI; auditing further showed the same pattern hand-copied into 23 already-scaffolded `*UpdateRequestDTO`s across that project's four services (hub + three domain apps), so the fix belongs here, at the source, not in each generated file. `DtoGenerator::updateRequestDto()` now tracks field presence per field into a `$mappedFields` accumulator, keyed off `Field::$nullable` — the same flag that already controls the generated migration's `'null' => true/false`, so a field's clearability in the Update DTO now matches its actual DB constraint by construction:
+  - **NOT NULL fields** are only recorded when `map()` resolved a real, non-null value — an explicit `null` is treated the same as omitting the field, same as before. Never writes `NULL` into a NOT NULL column.
+  - **Nullable fields** are recorded whenever the key was present in the payload at all, even when the resolved value is `null` — this is what lets `{"field": null}` actually reach `toArray()` and clear the column.
+  - Nullable `int`/`float`/`string` fields additionally treat an empty string (`''`) as "no value" — an HTML form's blank text/number input — so it clears the column the same as `null`, rather than silently coercing to `0`/`''`. NOT NULL fields never take this shortcut; an empty string there is a validation concern (`rules()`), not an implicit "leave unchanged".
+  - `array`-typed fields now require `is_array($data[x])` in addition to presence, instead of blindly `(array)`-casting whatever was sent (a scalar would previously have been silently wrapped into a single-element array).
+  - `toArray()` is now just `return $this->mappedFields;` — no more `array_filter`.
+  New regression test `DtoGeneratorTest::testUpdateRequestDtoPreservesExplicitNullOnlyForNullableFields()` asserts the exact generated `map()`/`toArray()` shape for both a NOT NULL and a nullable field. The `testUpdateRequestDtoSnapshot` baseline was regenerated (`--update-snapshots`) — its 3-field canonical schema has no nullable field, so the snapshot alone would not have exercised the fix; the dedicated test above covers that case explicitly.
+- **`CreateRequestDTO` and `ResponseDTO` generation are unaffected** — `map()`/`buildMapExpression()` (the Create-DTO code path) already had no such ambiguity: every Create field is expected to be sent, so there is no "omitted vs. explicitly null" distinction to make. Only `buildUpdateMapExpression()` (new, Update-DTO-only) needed the presence-tracking logic.
+
 ## [1.1.2] — 2026-07-24
 
 ### Security

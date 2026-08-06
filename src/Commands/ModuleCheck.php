@@ -113,6 +113,35 @@ class ModuleCheck extends BaseCommand
             $missing[] = "Missing route reference in {$routesPath}: {$controllerRef}";
         }
 
+        // Check content-localization prerequisites (LOC-007). The scaffold has no
+        // separate schema-metadata file, so detect translatable/sluggable from the
+        // generated Service's trait composition, then verify the app-level factories
+        // these traits depend on actually exist — module:check runs inside the real
+        // consumer app, so it's safe to check the loaded class directly rather than
+        // parse files. Without this, the failure only surfaces as a cryptic
+        // BadMethodCallException the first time the scaffolded service is resolved.
+        $servicePath = APPPATH . "{$p->services}/{$domain}/{$resource}Service.php";
+        $serviceSource = is_file($servicePath) ? (string) file_get_contents($servicePath) : '';
+        if (str_contains($serviceSource, 'HasLocalizedTranslations')) {
+            if (!method_exists(\Config\Services::class, 'localizedTranslationStore')) {
+                $missing[] = "Config\\Services::localizedTranslationStore() not found — required by "
+                    . "{$resource}Service's HasLocalizedTranslations. See "
+                    . 'vendor/dcardenasl/ci4-api-core/docs/EXTENDING_LOCALIZATION.md § 4.';
+            }
+            if (!class_exists(\Config\Localization::class)) {
+                $missing[] = 'app/Config/Localization.php not found — required to register '
+                    . "{$resource}'s translatable fields. See "
+                    . 'vendor/dcardenasl/ci4-api-core/docs/EXTENDING_LOCALIZATION.md § 1.';
+            }
+        }
+        if (str_contains($serviceSource, 'HasPublicSlugs')) {
+            if (!method_exists(\Config\Services::class, 'publicSlugStore')) {
+                $missing[] = "Config\\Services::publicSlugStore() not found — required by "
+                    . "{$resource}Service's HasPublicSlugs. See "
+                    . 'vendor/dcardenasl/ci4-api-core/docs/EXTENDING_LOCALIZATION.md § 4.';
+            }
+        }
+
         if ($missing !== []) {
             CLI::error('Module bootstrap check failed.');
             foreach ($missing as $item) {

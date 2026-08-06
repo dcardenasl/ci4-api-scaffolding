@@ -52,6 +52,7 @@ class MakeCrud extends BaseCommand
         '--dry-run' => 'Show planned files and wiring without writing anything',
         '--no-wire' => 'Generate files but skip Services.php injection. Print snippets to paste manually instead.',
         '--skip-fk-validation' => 'Skip the FK target check when the database is unreachable. Use only when you know the targets exist.',
+        '--sluggable' => 'Field name to generate public locale-aware slugs from. That field must also carry the `translatable` fields-string modifier.',
     ];
 
     public function run(array $params)
@@ -75,6 +76,8 @@ class MakeCrud extends BaseCommand
         $dryRun = CLI::getOption('dry-run') !== null;
         $noWire = CLI::getOption('no-wire') !== null;
         $skipFkValidation = CLI::getOption('skip-fk-validation') !== null;
+        $sluggableOption = CLI::getOption('sluggable');
+        $sluggableField = is_string($sluggableOption) && trim($sluggableOption) !== '' ? trim($sluggableOption) : null;
 
         if (StringHelper::hasAcronymRun($resource)) {
             CLI::write("⚠ Resource '{$resource}' contains a run of consecutive uppercase letters.", 'yellow');
@@ -101,6 +104,38 @@ class MakeCrud extends BaseCommand
             // 1b. Reject field names that would silently break generation
             (new FieldNameValidator())->validate($fields);
 
+            // 1c. --sluggable requires the named field to exist, be a string,
+            // and carry the `translatable` modifier — slug generation reads
+            // locale-specific values from the translation store, so an
+            // untranslated source field would only ever produce one slug
+            // duplicated across every locale.
+            if ($sluggableField !== null) {
+                $target = null;
+                foreach ($fields as $field) {
+                    if ($field->name === $sluggableField) {
+                        $target = $field;
+                        break;
+                    }
+                }
+
+                if ($target === null) {
+                    throw new InvalidArgumentException(
+                        "--sluggable={$sluggableField} does not match any field in --fields."
+                    );
+                }
+                if ($target->type !== 'string') {
+                    throw new InvalidArgumentException(
+                        "--sluggable={$sluggableField} must be a 'string' field (got '{$target->type}')."
+                    );
+                }
+                if (!$target->translatable) {
+                    throw new InvalidArgumentException(
+                        "--sluggable={$sluggableField} must also carry the 'translatable' modifier in --fields, "
+                        . "e.g. '{$sluggableField}:string:required|translatable'."
+                    );
+                }
+            }
+
             // 2. Build Schema
             $schema = new ResourceSchema(
                 resource: $resource,
@@ -109,6 +144,7 @@ class MakeCrud extends BaseCommand
                 fields: $fields,
                 softDelete: $softDelete,
                 apiVersion: $apiVersion,
+                sluggableField: $sluggableField,
             );
 
             // 2b. Verify FK targets exist. By default, abort if the DB is
@@ -131,6 +167,13 @@ class MakeCrud extends BaseCommand
                 }
                 CLI::write("Would wire: \\{$config->servicesFactoryClass}::" . $schema->getResourceLower() . 'Service()', 'green');
                 CLI::write("Would wire: \\{$config->servicesFactoryClass}::" . $schema->getResourceLower() . 'ResponseMapper()', 'green');
+                if ($schema->hasTranslatableFields()) {
+                    $registryFields = implode(', ', $schema->translatableFieldNames());
+                    CLI::write(
+                        "Would wire: Config\\Localization::\$translatableFields['{$schema->localizationResourceType()}'] = [{$registryFields}]",
+                        'green'
+                    );
+                }
                 CLI::newLine();
                 CLI::write('✅ Dry-run complete.', 'white', 'green');
                 return EXIT_SUCCESS;

@@ -19,6 +19,7 @@ readonly class Field
         public bool $searchable = false,
         public bool $filterable = false,
         public bool $sortable = false,
+        public bool $translatable = false,
         public ?string $fkTable = null,
         public ?string $defaultValue = null,
         public ?int $length = null,

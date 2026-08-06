@@ -40,11 +40,23 @@ parameters:
         # Config\Database / Config\Services live in the consumer's app/Config/.
         # PHPStan can't resolve them from the package side.
         -
-            message: '#(unknown class|Class) Config\\(Database|Services|App|Api)( not found\.)?#'
+            message: '#(unknown class|Class) Config\\(Database|Services|App|Api|Localization)( not found\.)?#'
             paths:
                 - src/Validators/*
                 - src/Wiring/*
                 - src/Commands/*
+
+        # ModuleCheck runs inside a real booted consumer app (as a spark
+        # command), where Config\Services / Config\Localization genuinely
+        # exist — but PHPStan analyzes only this package's own src/, where
+        # they don't, so it treats method_exists()/class_exists() against
+        # those FQCNs as provably-false rather than "unknown". Verified
+        # manually against a real consumer app (LOC-007) rather than by
+        # static analysis of this package alone, which cannot see the
+        # consumer's app/Config/ classes.
+        -
+            identifier: function.impossibleType
+            path: src/Commands/ModuleCheck.php
 
         # CLI::prompt() returns string|bool. The === null defensive check is
         # intentional for non-TTY environments. PHPStan reads only string.
