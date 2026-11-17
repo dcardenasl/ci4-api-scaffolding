@@ -31,8 +31,8 @@ final readonly class {resource}ResponseDTO implements {ifaceShort}
     {
         return new static(
             id: (int) ($data['id'] ?? 0),
-{fromArrayMappings}            createdAt: $data['created_at'] ?? null,
-            updatedAt: $data['updated_at'] ?? null,
+{fromArrayMappings}            createdAt: isset($data['created_at']) ? (string) $data['created_at'] : null,
+            updatedAt: isset($data['updated_at']) ? (string) $data['updated_at'] : null,
         );
     }
 
