@@ -4,6 +4,16 @@ All notable changes to `dcardenasl/ci4-api-scaffolding` will be documented here.
 
 ## [Unreleased]
 
+## [1.2.2] — 2026-11-17
+
+### Changed
+
+- **`dcardenasl/ci4-api-core` 1.1.0 → 1.6.1** — the scaffolding now requires `^1.6`, so newly generated projects get the current core. Between 1.2.0 and 1.6.1 the core started publishing its own migrations for translations, public slugs and infrastructure tables (`jobs`, `request_logs`, `audit_logs`, `idempotency_keys`). This scaffolding ships no migrations of its own for those tables, so nothing collides.
+
+### Security
+
+- **`codeigniter4/framework` 4.7.3 → 4.7.6** — clears four production security advisories that affect CodeIgniter versions below 4.7.4 (`composer audit --no-dev`). Projects generated from earlier versions should run `composer update codeigniter4/framework`.
+
 ## [1.2.1] — 2026-08-06
 
 ### Fixed
