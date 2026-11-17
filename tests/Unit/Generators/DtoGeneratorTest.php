@@ -133,6 +133,39 @@ final class DtoGeneratorTest extends TestCase
         self::assertStringNotContainsString("createdAt: \$data['created_at'] ?? null,", $responseDto);
     }
 
+    /**
+     * SCAFF-007 behaviour check: run the generated expression on a real CodeIgniter\I18n\Time value,
+     * which is what Entity::toArray() returns for datetime columns. Without the cast, the value is an
+     * object and the string-typed constructor argument fails.
+     */
+    public function testGeneratedTimestampExpressionYieldsStringForCodeIgniterTime(): void
+    {
+        $generator = new DtoGenerator(ScaffoldingConfig::defaults());
+        $schema = new ResourceSchema(
+            resource: 'Product',
+            domain: 'Catalog',
+            route: 'products',
+            fields: [new Field(name: 'name', type: 'string', required: true)],
+        );
+
+        $responseDto = '';
+        foreach ($generator->generate($schema) as $path => $content) {
+            if (str_contains($path, 'ResponseDTO')) {
+                $responseDto = $content;
+            }
+        }
+
+        self::assertMatchesRegularExpression('/createdAt: (.+),\n/', $responseDto);
+        preg_match('/createdAt: (.+),\n/', $responseDto, $m);
+        $expression = $m[1];
+
+        $data = ['created_at' => new \CodeIgniter\I18n\Time('2026-01-02 03:04:05')];
+        $value = eval('return ' . $expression . ';');
+
+        self::assertIsString($value);
+        self::assertSame('2026-01-02 03:04:05', $value);
+    }
+
     public function testUpdateRequestDtoPreservesExplicitNullOnlyForNullableFields(): void
     {
         $generator = new DtoGenerator(ScaffoldingConfig::defaults());
