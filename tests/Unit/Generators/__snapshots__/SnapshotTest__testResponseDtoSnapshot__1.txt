@@ -39,8 +39,8 @@ final readonly class ProductResponseDTO implements DataTransferObjectInterface
             name: (string) ($data['name'] ?? ''),
             price: (float) ($data['price'] ?? 0),
             in_stock: (bool) ($data['in_stock'] ?? false),
-            createdAt: $data['created_at'] ?? null,
-            updatedAt: $data['updated_at'] ?? null,
+            createdAt: isset($data['created_at']) ? (string) $data['created_at'] : null,
+            updatedAt: isset($data['updated_at']) ? (string) $data['updated_at'] : null,
         );
     }
 

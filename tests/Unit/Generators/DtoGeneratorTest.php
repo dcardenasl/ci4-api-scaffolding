@@ -99,6 +99,40 @@ final class DtoGeneratorTest extends TestCase
      *   was present in the payload at all, even when the resolved value is
      *   null — this is what lets an explicit null actually clear the column.
      */
+    /**
+     * SCAFF-007: the engine-managed timestamps must be cast to string in fromArray(), because the
+     * Entity returns CodeIgniter\I18n\Time objects and the constructor expects ?string.
+     */
+    public function testGeneratedResponseDtoCastsEngineTimestampsInFromArray(): void
+    {
+        $generator = new DtoGenerator(ScaffoldingConfig::defaults());
+        $schema = new ResourceSchema(
+            resource: 'Product',
+            domain: 'Catalog',
+            route: 'products',
+            fields: [new Field(name: 'name', type: 'string', required: true)],
+        );
+
+        $artifacts = $generator->generate($schema);
+        $responseDto = null;
+        foreach ($artifacts as $path => $content) {
+            if (str_contains($path, 'ResponseDTO')) {
+                $responseDto = $content;
+            }
+        }
+
+        self::assertNotNull($responseDto);
+        self::assertStringContainsString(
+            "createdAt: isset(\$data['created_at']) ? (string) \$data['created_at'] : null,",
+            $responseDto,
+        );
+        self::assertStringContainsString(
+            "updatedAt: isset(\$data['updated_at']) ? (string) \$data['updated_at'] : null,",
+            $responseDto,
+        );
+        self::assertStringNotContainsString("createdAt: \$data['created_at'] ?? null,", $responseDto);
+    }
+
     public function testUpdateRequestDtoPreservesExplicitNullOnlyForNullableFields(): void
     {
         $generator = new DtoGenerator(ScaffoldingConfig::defaults());
