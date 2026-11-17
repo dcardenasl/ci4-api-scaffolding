@@ -1,9 +1,10 @@
 name: CI
 
+# CI runs only on pull requests into `main` (and by hand); `dev` is guarded locally by hooks.
 on:
-  push:
-    branches: [main]
   pull_request:
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   test:
