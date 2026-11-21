@@ -1,0 +1,21 @@
+{
+  "nombre": "ci4-multirepo",
+  "doc_check": {
+    "roadmap": "ROADMAP.md",
+    "tasks": "TASKS.md",
+    "archives": "ARCHIVES.md",
+    "planes": "docs/plan/*.md",
+    "verificaciones": "docs/verification/*.md",
+    "adrs": "docs/adr/*.md",
+    "primera_version_con_plantilla": 1
+  },
+  "manifiestos": [],
+  "comandos": {
+    "rapido": "composer test",
+    "completo": "composer test && composer analyse",
+    "build": ""
+  },
+  "changelog": "CHANGELOG.md",
+  "readme_latest": false,
+  "kit_version": "0.2"
+}
