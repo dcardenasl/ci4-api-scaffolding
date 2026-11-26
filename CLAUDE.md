@@ -117,3 +117,7 @@ without updating the authoritative document in `ci4-api-core` first.
 - Don't run `php spark make:crud` directly from this repo — there is no CI4 app here. The command only works inside a consumer project that has `dcardenasl/ci4-api-scaffolding` installed.
 - Don't manually edit files in `src/Generators/Templates/` without checking that snapshot tests still pass.
 - Don't skip `composer quality` — PHPStan level 8 catches real bugs.
+
+## Presupuesto de GitHub Actions
+
+Aplica el protocolo de [`docs/protocols/protocolo-minutos-actions.md`](docs/protocols/protocolo-minutos-actions.md): registra el consumo mensual, conserva la reserva de publicación, dirige Dependabot rutinario a `dev` y, si faltan minutos, continúa localmente con trabajo aprobado de versiones siguientes. No publiques sin los gates completos ni amplíes una versión congelada.
